@@ -1,4 +1,4 @@
-package com.esimediag05Mantenimiento.app;
+package com.esimediag05.app;
 
 import com.getcapacitor.BridgeActivity;
 

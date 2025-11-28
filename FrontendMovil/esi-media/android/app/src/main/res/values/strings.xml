@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">esimedia-mantenimiento</string>
-    <string name="title_activity_main">esimedia-mantenimiento</string>
-    <string name="package_name">com.esimediag05Mantenimiento.app</string>
-    <string name="custom_url_scheme">com.esimediag05Mantenimiento.app</string>
+    <string name="app_name">esi-media-g05</string>
+    <string name="title_activity_main">esi-media-g05</string>
+    <string name="package_name">com.esimediag05.app</string>
+    <string name="custom_url_scheme">com.esimediag05.app</string>
 </resources>
