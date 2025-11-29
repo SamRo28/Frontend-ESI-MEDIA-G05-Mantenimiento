@@ -1,0 +1,74 @@
+<button class="overlay" (click)="onClose()" aria-label="Cerrar modal"></button>
+
+<div class="edit-panel modal open" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <h3>Editar perfil</h3>
+
+    <form (ngSubmit)="onSave()">
+        <div class="row">
+            <label class="label-lock" for="email_ro">
+                Email <span class="lock" title="Campo bloqueado">🔒</span>
+                <span class="badge-ro">bloqueado</span>
+            </label>
+            <input id="email_ro" type="text" [ngModel]="userEmail" name="email_ro" class="ro" readonly />
+        </div>
+
+        <div class="row">
+            <label class="label-lock" for="fechaNac_ro">
+                Fecha de nacimiento <span class="lock" title="Campo bloqueado">🔒</span>
+                <span class="badge-ro">bloqueado</span>
+            </label>
+            <input type="date" [ngModel]="model.fechaNac" name="fechaNac_ro" class="ro" readonly />
+        </div>
+
+        <div class="row">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" [(ngModel)]="model.nombre" name="nombre" />
+        </div>
+
+        <div class="row">
+            <label for="apellidos">Apellidos</label>
+            <input id="apellidos" type="text" [(ngModel)]="model.apellidos" name="apellidos" />
+        </div>
+
+        <div class="row">
+            <label for="alias">Alias</label>
+            <input id="alias" type="text" name="alias" [ngModel]="model.alias"
+                (ngModelChange)="onAliasModelChange($event)" />
+
+            <small class="err" *ngIf="aliasError">{{ aliasError }}</small>
+            <small class="hint" *ngIf="aliasChecking && !aliasError">Comprobando alias…</small>
+        </div>
+
+
+        <div class="row">
+            <label>VIP
+                <input type="checkbox" [ngModel]="model.vip" name="vip" (ngModelChange)="onVipModelChange($event)" />
+            </label>
+        </div>
+
+        <div class="Avatar">
+            <label for="elegirAvatar">Avatar</label>
+            <button id="elegirAvatar" type="button" class="btn" (click)="onOpenAvatarModal()">Elegir Avatar</button>
+            <div *ngIf="selectedAvatar" class="selected-avatar-card">
+                <img [src]="selectedAvatar" alt="avatar" class="selected-avatar-card__img">
+                <div class="selected-avatar-card__text">
+                    <b>Avatar seleccionado</b>
+                    <small>Puedes cambiarlo cuando quieras</small>
+                </div>
+            </div>
+        </div>
+
+        <p class="ok" *ngIf="okMsg">{{ okMsg }}</p>
+        <p class="err" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+        <div class="actions">
+            <button class="btn-darseBaja" type="button" (click)="onDarDeBaja()">Eliminar Cuenta</button>
+            <button type="button" class="btn-out" (click)="onClose()">Cancelar</button>
+            <button type="submit" class="btn-primario"
+                [disabled]="saving || aliasChecking || aliasTaken || !!aliasError">
+                {{ saving ? 'Guardando…' : 'Guardar' }}
+            </button>
+
+        </div>
+    </form>
+</div>
