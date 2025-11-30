@@ -1,7 +1,20 @@
 <div class="screen-dim" (click)="onClose()" aria-hidden="true"></div>
 
 <div class="pop-card" aria-modal="true" role="dialog" (click)="$event.stopPropagation()">
-  <button type="button" class="pop-card__close" aria-label="Cerrar" (click)="onClose()">✕</button>
+  <div class="pop-card__top-actions">
+    <button type="button" class="btn-back-home" (click)="onClose()">
+      <svg viewBox="0 0 24 24" class="icon-back" aria-hidden="true">
+        <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+      </svg>
+      <span>Volver</span>
+    </button>
+    <button type="button" class="pop-card__close" aria-label="Cerrar" (click)="onClose()">
+      <svg viewBox="0 0 24 24" class="icon-close" aria-hidden="true">
+        <path fill="currentColor"
+          d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 17.59 13.41 12z" />
+      </svg>
+    </button>
+  </div>
 
   <div class="pop-card__media">
     <ng-container *ngIf="content.imagen && content.imagen.trim(); else noimgPop">
@@ -22,11 +35,7 @@
     <div class="pop-card__head">
       <h3 class="pop-card__title" [title]="content.titulo">{{ content.titulo }}</h3>
       <div class="pop-card__rating">
-        <app-star-rating
-          [contentId]="content.id"
-          [userEmail]="userEmail"
-          [enabled]="false"
-          [autoReproducir]="false">
+        <app-star-rating [contentId]="content.id" [userEmail]="userEmail" [enabled]="false" [autoReproducir]="false">
         </app-star-rating>
       </div>
     </div>
@@ -37,54 +46,39 @@
       <span>{{ content.resolucion || '—' }}</span>
       <span>·</span>
       <span>{{ content.duracionMinutos || '—' }} min</span>
-      <span *ngIf="content.reproducciones !== undefined" class="plays" title="Reproducciones">· ▶ {{ content.reproducciones }}</span>
+      <span *ngIf="content.reproducciones !== undefined" class="plays" title="Reproducciones">· ▶ {{
+        content.reproducciones }}</span>
     </div>
 
     <div class="pop-card__actions">
-      <button type="button"
-              class="play-btn play-btn--lg"
-              title="Reproducir"
-              (click)="onPlay($event)">
+      <button type="button" class="play-btn play-btn--lg" title="Reproducir" (click)="onPlay($event)">
         ▶
       </button>
 
-      <button type="button"
-              *ngIf="isUsuario"
-              class="fav-btn fav-btn--lg"
-              [class.is-fav]="isFav"
-              [attr.aria-pressed]="isFav"
-              [disabled]="pendingToggle"
-              (click)="onToggleFav($event)"
-              [title]="isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'">
+      <button type="button" *ngIf="isUsuario" class="fav-btn fav-btn--lg" [class.is-fav]="isFav"
+        [attr.aria-pressed]="isFav" [disabled]="pendingToggle" (click)="onToggleFav($event)" [title]="isFav ? '' : ''">
         <svg viewBox="0 0 24 24" class="heart" aria-hidden="true">
-          <path d="M12 21s-6.3-4.35-9.1-7.13A5.91 5.91 0 0 1 12 4a5.91 5.91 0 0 1 9.1 9.87C18.3 16.65 12 21 12 21z"/>
+          <path d="M12 21s-6.3-4.35-9.1-7.13A5.91 5.91 0 0 1 12 4a5.91 5.91 0 0 1 9.1 9.87C18.3 16.65 12 21 12 21z" />
         </svg>
         <span class="sr-only">
-          {{ isFav ? 'Quitar de favoritos' : 'Añadir a favoritos' }}
+          {{ isFav ? '' : '' }}
         </span>
       </button>
 
-      <button *ngIf="!readOnly"
-              type="button"
-              class="rate-btn rate-btn--lg"
-              title="Valorar"
-              (click)="onToggleRating($event)">
+      <button *ngIf="!readOnly" type="button" class="rate-btn rate-btn--lg" title="Valorar"
+        (click)="onToggleRating($event)">
         ★
       </button>
     </div>
 
-    <div class="lista-add"
-        *ngIf="isUsuario && misListas && misListas.length > 0">
+    <div class="lista-add" *ngIf="isUsuario && misListas && misListas.length > 0">
       <div class="lista-add__header">
         <span class="lista-add__label">Añadir a mis listas</span>
         <span class="lista-add__badge">🔒 Solo tú</span>
       </div>
 
       <div class="lista-add__controls">
-        <select
-          class="lista-add__select"
-          [id]="'lista-select-' + content.id"
-          [(ngModel)]="selectedListaId"
+        <select class="lista-add__select" [id]="'lista-select-' + content.id" [(ngModel)]="selectedListaId"
           [disabled]="readOnly || creatingList">
           <option [ngValue]="''">Selecciona una lista…</option>
           <option *ngFor="let l of misListas" [ngValue]="l.id">
@@ -92,10 +86,7 @@
           </option>
         </select>
 
-        <button
-          type="button"
-          class="lista-add__btn"
-          (click)="onAddToList()"
+        <button type="button" class="lista-add__btn" (click)="onAddToList()"
           [disabled]="readOnly || !selectedListaId || creatingList">
           {{ creatingList ? 'Añadiendo…' : 'Añadir' }}
         </button>
@@ -110,11 +101,7 @@
     </div>
 
     <div class="rate-panel" *ngIf="isRatingOpen">
-      <app-star-rating
-        [contentId]="content.id"
-        [userEmail]="userEmail"
-        [enabled]="true"
-        [autoReproducir]="false"
+      <app-star-rating [contentId]="content.id" [userEmail]="userEmail" [enabled]="true" [autoReproducir]="false"
         (rated)="onRate($event)">
       </app-star-rating>
       <div class="rate-actions">

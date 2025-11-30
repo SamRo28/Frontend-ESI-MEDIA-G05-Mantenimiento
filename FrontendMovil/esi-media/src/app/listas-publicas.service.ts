@@ -9,6 +9,10 @@ export interface ListaPublica {
   descripcion: string;
   userEmail: string;
   contenidosIds: string[];
+  // Optional fields used in UI or returned by backend
+  publica?: boolean;
+  emailUsuario?: string;
+  contenidos?: any[]; // For populated content
 }
 
 @Injectable({ providedIn: 'root' })

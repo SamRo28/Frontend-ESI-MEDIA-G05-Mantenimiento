@@ -1,0 +1,21 @@
+<nav class="mobile-nav">
+    <button type="button" class="nav-item" (click)="home.emit()">
+        <span class="icon">🏠</span>
+        <span class="label">Inicio</span>
+    </button>
+
+    <button type="button" class="nav-item" [class.active]="filtersActive" (click)="toggleFilters.emit()">
+        <span class="icon">🔍</span>
+        <span class="label">Filtros</span>
+    </button>
+
+    <button type="button" class="nav-item" (click)="openProfile.emit()">
+        <span class="icon">👤</span>
+        <span class="label">Perfil</span>
+    </button>
+
+    <button type="button" class="nav-item" (click)="logout.emit()">
+        <span class="icon">🚪</span>
+        <span class="label">Salir</span>
+    </button>
+</nav>

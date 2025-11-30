@@ -56,7 +56,6 @@
             </button>
           </div>
 
-          <!-- Select real para accesibilidad / teclado -->
           <label for="catalogFilter" class="sr-only">Filtro de catálogo</label>
           <select id="catalogFilter" class="catalog-mode-select sr-only" [(ngModel)]="filterMode"
             (change)="onFilterChange()">
@@ -75,15 +74,17 @@
       <div class="user-layout">
 
         <aside class="user-filters">
-          <button type="button" class="btn--ghost mobile-filter-toggle" (click)="toggleFilters()">
-            {{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }} 🔽
-          </button>
           <div class="user-filters-card" [class.filters-open]="showFilters">
             <div class="user-filters-header">
               <h3 class="user-filters-title">🔎 Filtros</h3>
-              <span class="user-filters-badge">
-                {{ filteredCon.length || 0 }} resultado(s)
-              </span>
+              <div class="header-actions">
+                <span class="user-filters-badge">
+                  {{ filteredCon.length || 0 }} resultado(s)
+                </span>
+                <button class="close-filters-btn" (click)="closeFilters()" type="button" aria-label="Cerrar filtros">
+                  ✕ Cerrar
+                </button>
+              </div>
             </div>
 
             <form (submit)="$event.preventDefault()">
@@ -173,6 +174,24 @@
                 </select>
               </div>
 
+              <div class="filter-section mobile-only">
+                <label>Vista</label>
+                <div class="catalog-mode-pills">
+                  <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'todos'"
+                    (click)="filterMode = 'todos'; onFilterChange()">
+                    📚 Todos
+                  </button>
+                  <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'favoritos'"
+                    (click)="filterMode = 'favoritos'; onFilterChange()">
+                    ❤️ Favoritos
+                  </button>
+                  <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'historial'"
+                    (click)="filterMode = 'historial'; onFilterChange()">
+                    🕓 Historial
+                  </button>
+                </div>
+              </div>
+
               <button type="button" class="btn--ghost btn-reset" (click)="resetFiltros()">Limpiar filtros</button>
             </form>
           </div>
@@ -223,7 +242,7 @@
 
 
               <div class="grid">
-                <article *ngFor="let c of pagedCon" class="card" [class.is-open]="isDetailsOpen(c)">
+                <article *ngFor="let c of pagedCon" class="card" [class.is-open]="selectedContent?.id === c.id">
                   <div class="thumb" [class.launching]="launchingId===c.id" (click)="openDetails(c)"
                     (keydown)="handleKeyDown($event)">
                     <ng-container *ngIf="c.imagen && c.imagen.trim(); else noimg">
@@ -253,15 +272,6 @@
                         (click)="toggleRating(c); $event.stopPropagation()">★</button>
                     </div>
                   </div>
-
-                  <app-content-details-modal *ngIf="isDetailsOpen(c)" [content]="c" [userEmail]="userEmail"
-                    [isUsuario]="isUsuario" [readOnly]="readOnly" [misListas]="misListas" [isFav]="isFav(c.id)"
-                    [pendingToggle]="pendingToggle[c.id]" [creatingList]="creandoListaContenido[c.id]"
-                    [msgListaOk]="msgListaOk[c.id]" [msgListaError]="msgListaError[c.id]" (close)="closeDetails(c)"
-                    (play)="play(c)" (toggleFav)="onToggleFav(c.id)" (toggleRating)="toggleRating(c)"
-                    (rate)="onRated(c.id, $event)" (addToList)="anadirContenidoALista(c, $event)">
-                  </app-content-details-modal>
-
                 </article>
               </div>
 
@@ -295,12 +305,28 @@
   <app-media-player-modal *ngIf="playerOpen" [playingTitle]="playingTitle" [playerKind]="playerKind"
     [playerSrc]="playerSrc" [embedUrl]="embedUrl" (close)="closePlayer()">
   </app-media-player-modal>
+
   <app-create-list-modal *ngIf="showCrearListaModal" [nombre]="nuevaListaNombre" [descripcion]="nuevaListaDescripcion"
     [creating]="creatingList" [okMsg]="crearListaOk" [errorMsg]="crearListaError" (close)="closeCrearListaModal()"
     (create)="crearLista()" (nombreChange)="nuevaListaNombre = $event"
     (descripcionChange)="nuevaListaDescripcion = $event">
   </app-create-list-modal>
 
+  <app-content-details-modal *ngIf="isDetailsModalOpen && selectedContent" [content]="selectedContent"
+    [userEmail]="userEmail" [isUsuario]="isUsuario" [readOnly]="readOnly" [misListas]="misListas"
+    [isFav]="selectedContent ? isFav(selectedContent.id) : false"
+    [pendingToggle]="selectedContent ? pendingToggle[selectedContent.id] : false"
+    [creatingList]="selectedContent ? creandoListaContenido[selectedContent.id] : false"
+    [msgListaOk]="selectedContent ? msgListaOk[selectedContent.id] : null"
+    [msgListaError]="selectedContent ? msgListaError[selectedContent.id] : null" (close)="closeDetails()"
+    (play)="selectedContent && play(selectedContent)" (toggleFav)="selectedContent && onToggleFav(selectedContent.id)"
+    (toggleRating)="selectedContent && toggleRating(selectedContent)"
+    (rate)="selectedContent && onRated(selectedContent.id, $event)"
+    (addToList)="selectedContent && anadirContenidoALista(selectedContent, $event)">
+  </app-content-details-modal>
 
+  <app-mobile-navbar [filtersActive]="showFilters" (toggleFilters)="toggleFilters()" (openProfile)="toggleEditar()"
+    (logout)="CerrarSesion()" (home)="cargarContenidos()">
+  </app-mobile-navbar>
 
 </div>

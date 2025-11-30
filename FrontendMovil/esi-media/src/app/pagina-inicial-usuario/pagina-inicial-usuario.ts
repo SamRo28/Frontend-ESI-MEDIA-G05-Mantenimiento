@@ -17,6 +17,8 @@ import { EditProfileModalComponent } from '../modals/edit-profile-modal/edit-pro
 import { AvatarSelectorModalComponent } from '../modals/avatar-selector-modal/avatar-selector-modal.component';
 import { MediaPlayerModalComponent } from '../modals/media-player-modal/media-player-modal.component';
 import { CreateListModalComponent } from '../modals/create-list-modal/create-list-modal.component';
+import { MobileNavbarComponent } from '../mobile-navbar/mobile-navbar.component';
+import { ListasPublicasService, ListaPublica } from '../listas-publicas.service';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -64,16 +66,7 @@ function isDirectMedia(url: string): boolean {
   const l = url.toLowerCase();
   return l.endsWith('.mp4') || l.endsWith('.webm') || l.endsWith('.ogg') || l.endsWith('.m3u8');
 }
-interface ListaPublica {
-  id: string;
-  nombre: string;
-  descripcion?: string;
-  publica?: boolean;
-  emailUsuario?: string;
-  userEmail?: string;
-  contenidosIds?: any[];
-  contenidos?: string[];
-}
+
 
 
 
@@ -88,7 +81,8 @@ interface ListaPublica {
     EditProfileModalComponent,
     AvatarSelectorModalComponent,
     MediaPlayerModalComponent,
-    CreateListModalComponent
+    CreateListModalComponent,
+    MobileNavbarComponent
   ],
   templateUrl: './pagina-inicial-usuario.html',
   styleUrls: ['./pagina-inicial-usuario.css'],
@@ -111,7 +105,14 @@ export class PaginaInicialUsuario implements OnInit {
   showCrearListaModal = false;
 
   showFilters = false;
-  toggleFilters() { this.showFilters = !this.showFilters; }
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+    this.cdr.markForCheck();
+  }
+  closeFilters() {
+    this.showFilters = false;
+    this.cdr.markForCheck();
+  }
 
   pageSize = 12;
   page = 1;
@@ -252,7 +253,8 @@ export class PaginaInicialUsuario implements OnInit {
     private readonly http: HttpClient,
     private readonly s: DomSanitizer,
     private contenidosSvc: ContenidosService,
-    private favs: FavoritesService
+    private favs: FavoritesService,
+    private listasService: ListasPublicasService
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
@@ -270,6 +272,96 @@ export class PaginaInicialUsuario implements OnInit {
     this.bootstrapUser();
     this.cargarContenidos();
     this.cargarListasPublicas();
+  }
+
+  cargarListasPublicas() {
+    this.listasService.listarListas().subscribe({
+      next: (listas) => {
+        this.listasPublicas = listas || [];
+        // Filter my lists (assuming userEmail matches)
+        if (this.userEmail) {
+          this.misListas = this.listasPublicas.filter(l => l.userEmail === this.userEmail || l.emailUsuario === this.userEmail);
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Error cargando listas', err)
+    });
+  }
+
+  openCrearListaModal() {
+    this.showCrearListaModal = true;
+    this.crearListaError = null;
+    this.crearListaOk = null;
+    this.nuevaListaNombre = '';
+    this.nuevaListaDescripcion = '';
+    this.cdr.markForCheck();
+  }
+
+  closeCrearListaModal() {
+    this.showCrearListaModal = false;
+    this.cdr.markForCheck();
+  }
+
+  crearLista() {
+    if (!this.nuevaListaNombre.trim()) {
+      this.crearListaError = 'El nombre es obligatorio';
+      return;
+    }
+    this.creatingList = true;
+    this.crearListaError = null;
+
+    const nueva = {
+      nombre: this.nuevaListaNombre,
+      descripcion: this.nuevaListaDescripcion,
+      userEmail: this.userEmail,
+      contenidosIds: [],
+      publica: this.nuevaListaPublica
+    };
+
+    this.listasService.crearLista(nueva).subscribe({
+      next: (res) => {
+        this.creatingList = false;
+        this.crearListaOk = 'Lista creada correctamente';
+        this.cargarListasPublicas();
+        setTimeout(() => this.closeCrearListaModal(), 1500);
+      },
+      error: (err) => {
+        this.creatingList = false;
+        this.crearListaError = err?.error?.message || 'Error al crear la lista';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  anadirContenidoALista(contenido: Contenido, listaId: string) {
+    if (!listaId || !contenido?.id) return;
+
+    this.creandoListaContenido[contenido.id] = true;
+    this.msgListaOk[contenido.id] = '';
+    this.msgListaError[contenido.id] = '';
+    this.cdr.markForCheck();
+
+    this.listasService.añadirContenido(listaId, contenido.id).subscribe({
+      next: () => {
+        this.creandoListaContenido[contenido.id] = false;
+        this.msgListaOk[contenido.id] = 'Añadido correctamente';
+        setTimeout(() => {
+          this.msgListaOk[contenido.id] = '';
+          this.cdr.markForCheck();
+        }, 3000);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.creandoListaContenido[contenido.id] = false;
+        this.msgListaError[contenido.id] = 'Error al añadir';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onAliasChange(alias: string) {
+    if (!this.model) this.model = {};
+    this.model.alias = alias;
   }
 
 
@@ -700,10 +792,22 @@ export class PaginaInicialUsuario implements OnInit {
   onRated(id: string, _resumen: any) { this.ratingOpen.delete(id); this.cargarContenidos(); }
   onVipChanged(v: boolean): void { this.model.vip = !!v; this.cargarContenidos(); this.cdr.markForCheck(); }
 
-  private detailsOpen = new Set<string>();
-  isDetailsOpen(c: { id?: string }): boolean { return !!c?.id && this.detailsOpen.has(c.id); }
-  openDetails(c: { id?: string }): void { if (!c?.id) return; this.detailsOpen.add(c.id); this.cdr.markForCheck(); }
-  closeDetails(c: { id?: string }): void { if (!c?.id) return; this.detailsOpen.delete(c.id); this.cdr.markForCheck(); }
+  selectedContent: Contenido | null = null;
+  isDetailsModalOpen = false;
+
+  openDetails(c: Contenido): void {
+    this.selectedContent = c;
+    this.isDetailsModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closeDetails(): void {
+    this.isDetailsModalOpen = false;
+    setTimeout(() => {
+      this.selectedContent = null;
+      this.cdr.markForCheck();
+    }, 300); // Wait for animation if any
+  }
 
   filterMode: 'todos' | 'favoritos' | 'historial' = 'todos';
   onFilterChange(): void { if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos(); this.applyFilter(); }
@@ -862,37 +966,7 @@ export class PaginaInicialUsuario implements OnInit {
   private get isAdminReadOnly(): boolean {
     return this.readOnly && this.fromAdmin && this.isAdmin();
   }
-  private cargarListasPublicas(): void {
-    const email = (this.userEmail || '').trim();
 
-    const obsPublicas = this.http.get<ListaPublica[]>(`${this.LISTAS_BASE}/publicas`);
-    const obsMias = email
-      ? this.http.get<ListaPublica[]>(`${this.LISTAS_BASE}/usuario/${encodeURIComponent(email)}`)
-      : of<ListaPublica[]>([]);
-
-    forkJoin([obsPublicas, obsMias]).subscribe({
-      next: ([publicas, mias]) => {
-        this.misListas = mias || [];
-
-        const map = new Map<string, ListaPublica>();
-        for (const l of publicas || []) {
-          if (l.id) map.set(l.id, l);
-        }
-        for (const l of mias || []) {
-          if (l.id) map.set(l.id, l);
-        }
-
-        this.listasPublicas = Array.from(map.values());
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error al cargar listas', err);
-        this.listasPublicas = [];
-        this.misListas = [];
-        this.cdr.markForCheck();
-      }
-    });
-  }
   public canPlay(): boolean {
     return !this.isAdminReadOnly;
   }
@@ -900,6 +974,7 @@ export class PaginaInicialUsuario implements OnInit {
   private getCurrentAge(): number | null {
     return this.calcAgeFromISO(this.model?.fechaNac || null);
   }
+
   private canSeeByAge(item: { restringidoEdad?: number | null }): boolean {
     if (this.readOnly && this.fromAdmin && this.isAdmin()) return true;
     const min = this.toNum(item?.restringidoEdad ?? 0);
@@ -908,147 +983,6 @@ export class PaginaInicialUsuario implements OnInit {
     if (age === null) return false;
     return age >= min;
   }
-  onAliasChange(v: string) {
-    const alias = this.t(v);
-    this.model.alias = alias;
-    this.aliasError = null;
-    this.aliasTaken = false;
 
-    if (!alias) {
-      return;
-    }
-
-    if (alias.length < this.ALIAS_MIN || alias.length > this.MAX.alias) {
-      this.aliasError = `El alias debe tener entre ${this.ALIAS_MIN} y ${this.MAX.alias} caracteres.`;
-      return;
-    }
-    const noCambio =
-      this.userAliasActual &&
-      alias &&
-      alias.localeCompare(this.userAliasActual, undefined, {
-        sensitivity: 'accent'
-      }) === 0;
-
-    if (noCambio) {
-      return;
-    }
-
-    this.aliasChecking = true;
-    this.auth.checkAlias(alias).subscribe({
-      next: (res: { available: boolean }) => {
-        this.aliasChecking = false;
-        this.aliasTaken = !res?.available;
-        if (this.aliasTaken) {
-          this.aliasError = 'El alias ya está en uso. Elige otro.';
-        }
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.aliasChecking = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  crearLista(): void {
-    if (this.readOnly) return;
-
-    const nombre = (this.nuevaListaNombre || '').trim();
-    const descripcion = (this.nuevaListaDescripcion || '').trim();
-
-    this.crearListaError = null;
-    this.crearListaOk = null;
-
-    if (!this.userEmail) {
-      this.crearListaError = 'No se ha podido determinar tu usuario. Vuelve a iniciar sesión.';
-      return;
-    }
-
-    if (!nombre) {
-      this.crearListaError = 'El nombre de la lista es obligatorio.';
-      return;
-    }
-
-    const payload: Partial<ListaPublica> = {
-      nombre,
-      descripcion,
-      userEmail: this.userEmail,
-      publica: false,
-      contenidosIds: []
-    };
-
-    this.creatingList = true;
-
-    this.http.post<ListaPublica>(this.LISTAS_BASE, payload).subscribe({
-      next: (lista) => {
-        this.creatingList = false;
-        this.misListas.push(lista);
-
-        const existe = this.listasPublicas.some(l => l.id === lista.id);
-        if (!existe) this.listasPublicas.push(lista);
-
-        this.nuevaListaNombre = '';
-        this.nuevaListaDescripcion = '';
-
-        this.crearListaOk = 'Lista creada correctamente.';
-
-        this.showCrearListaModal = false;
-
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.creatingList = false;
-        this.crearListaError = err?.error?.message || err?.message || 'No se pudo crear la lista.';
-        this.cdr.markForCheck();
-      }
-    });
-  }
-  anadirContenidoALista(c: Contenido, listaIdOverride?: string): void {
-    if (!c?.id || this.readOnly) return;
-
-    const listaId = listaIdOverride || this.selectedListaPorContenido[c.id];
-    if (!listaId) return;
-
-    this.msgListaOk[c.id] = '';
-    this.msgListaError[c.id] = '';
-    this.creandoListaContenido[c.id] = true;
-    const url = `${this.LISTAS_BASE}/${encodeURIComponent(listaId)}/contenidos/${encodeURIComponent(c.id)}`;
-
-    this.http.post<ListaPublica>(url, {}).subscribe({
-      next: (listaActualizada) => {
-        this.creandoListaContenido[c.id] = false;
-        this.msgListaOk[c.id] = 'Contenido añadido a la lista.';
-        this.msgListaError[c.id] = '';
-
-        const ix = this.listasPublicas.findIndex(l => l.id === listaActualizada.id);
-        if (ix >= 0) this.listasPublicas[ix] = listaActualizada;
-
-        const ix2 = this.misListas.findIndex(l => l.id === listaActualizada.id);
-        if (ix2 >= 0) this.misListas[ix2] = listaActualizada;
-
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.creandoListaContenido[c.id] = false;
-        this.msgListaError[c.id] =
-          err?.error?.message || err?.message || 'No se pudo añadir a la lista.';
-        this.msgListaOk[c.id] = '';
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  openCrearListaModal(): void {
-    if (this.readOnly) return;
-    this.nuevaListaNombre = '';
-    this.nuevaListaDescripcion = '';
-    this.crearListaError = null;
-    this.crearListaOk = null;
-    this.showCrearListaModal = true;
-  }
-
-  closeCrearListaModal(): void {
-    this.showCrearListaModal = false;
-  }
 
 }

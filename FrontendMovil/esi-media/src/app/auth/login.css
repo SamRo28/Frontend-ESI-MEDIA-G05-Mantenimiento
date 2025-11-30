@@ -61,7 +61,7 @@ input:focus {
 .toggle-eye-btn {
   flex: 0 0 auto;
   width: 44px;
-  height: 40px;
+  height: 44px;
   border: 1px solid rgba(51, 65, 85, 0.9);
   border-radius: 10px;
   background: #020617;

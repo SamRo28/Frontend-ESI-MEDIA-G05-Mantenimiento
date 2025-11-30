@@ -53,7 +53,7 @@ body {
 .input,
 .role-select {
   width: 100%;
-  padding: 11px 14px;
+  padding: 14px;
   margin: 7px 0;
   background: #020617;
   border: 1px solid rgba(51, 65, 85, 0.9);
@@ -128,7 +128,11 @@ body {
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
-  padding: 6px 10px;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
   border-radius: 9px;
   transition: background 0.2s ease, box-shadow .2s ease, transform .08s ease;
 }
@@ -323,7 +327,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-modal-backdrop);
   padding: 20px;
   overflow-y: auto;
 }
@@ -522,7 +526,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1100;
+  z-index: var(--z-modal-content);
 }
 
 .mfa-modal__overlay {
@@ -544,7 +548,7 @@ body {
   box-shadow:
     0 24px 70px rgba(0, 0, 0, 1),
     0 0 0 1px rgba(30, 64, 175, 0.9);
-  z-index: 2;
+  z-index: var(--z-layer-2);
 }
 
 .mfa-options {
