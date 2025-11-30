@@ -49,6 +49,7 @@
 
   <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
   <div *ngIf="alreadyRated" class="hint">
-    Ya has valorado este contenido.
+    <span *ngIf="userValue != null">Tu valoración: <strong>{{ userValue | number: '1.1-1' }}/5</strong></span>
+    <span *ngIf="userValue == null">Ya has valorado este contenido.</span>
   </div>
 </div>
