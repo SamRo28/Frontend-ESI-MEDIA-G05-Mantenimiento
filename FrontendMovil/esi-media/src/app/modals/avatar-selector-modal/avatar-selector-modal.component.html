@@ -1,0 +1,33 @@
+<div class="avatar-modal" (click)="onClose()" (keydown.enter)="onClose()" (keydown.space)="onClose()"
+    (keydown.escape)="onClose()">
+
+    <dialog class="avatar-modal-content" open aria-labelledby="avatarTitle" aria-modal="true"
+        (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+
+        <h2 id="avatarTitle" class="avatar-modal-title">Seleccionar avatar</h2>
+
+        <div class="avatar-preview" *ngIf="selectedAvatar; else noPreview">
+            <img [src]="selectedAvatar" alt="avatar seleccionado">
+            <div class="avatar-preview__caption">Seleccionado</div>
+        </div>
+        <ng-template #noPreview>
+            <div class="avatar-preview avatar-preview--placeholder">
+                <span>Selecciona uno de la galería</span>
+            </div>
+        </ng-template>
+
+        <ul class="avatar-grid">
+            <li *ngFor="let avatar of avatars" class="avatar-option" [class.selected]="selectedAvatar === avatar">
+                <button type="button" (click)="onSelect(avatar)" (keydown.enter)="onSelect(avatar)"
+                    [attr.aria-pressed]="selectedAvatar === avatar" [attr.aria-label]="'Elegir avatar ' + avatar">
+                    <img [src]="avatar" alt="avatar">
+                    <span class="avatar-check">✓</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="avatar-modal-actions">
+            <button class="btn--ghost" type="button" (click)="onClose()">Cancelar</button>
+        </div>
+    </dialog>
+</div>

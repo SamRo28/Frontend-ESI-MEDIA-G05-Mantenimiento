@@ -1,4 +1,7 @@
+const apiHost = '192.168.0.4';
+
 export const environment = {
   production: true,
-  API_BASE: 'http://localhost:8082',
+  apiHost: apiHost,
+  API_BASE: `http://${apiHost}:8082`,
 };

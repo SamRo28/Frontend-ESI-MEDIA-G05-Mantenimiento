@@ -1,0 +1,51 @@
+<button class="overlay" (click)="onClose()" aria-label="Cerrar modal">
+</button>
+
+<div class="edit-panel modal lista-modal open" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"
+    (keydown)="handleKeyDown($event)">
+
+    <div class="lista-modal__header">
+        <div class="lista-modal__icon">📂</div>
+        <div class="lista-modal__titles">
+            <h3>Crear lista privada</h3>
+            <p class="lista-modal__subtitle">
+                Organiza tus contenidos en una lista visible solo para ti.
+            </p>
+        </div>
+        <button type="button" class="lista-modal__close" (click)="onClose()" aria-label="Cerrar">
+            ✕
+        </button>
+    </div>
+
+    <form (ngSubmit)="onCreate()">
+        <div class="row">
+            <label for="nuevaListaNombre">Nombre de la lista</label>
+            <input id="nuevaListaNombre" type="text" name="nuevaListaNombre" [ngModel]="nombre"
+                (ngModelChange)="onNombreChange($event)" required placeholder="Ej. Pelis para el finde" />
+        </div>
+
+        <div class="row">
+            <label for="nuevaListaDescripcion">Descripción (opcional)</label>
+            <textarea id="nuevaListaDescripcion" name="nuevaListaDescripcion" rows="3" [ngModel]="descripcion"
+                (ngModelChange)="onDescripcionChange($event)"
+                placeholder="Añade una nota rápida sobre esta lista"></textarea>
+        </div>
+
+        <div class="lista-modal__pill-row">
+            <span class="lista-modal__pill">🔒 Modo privado</span>
+            <small class="lista-modal__hint">
+                Solo tú podrás ver y gestionar esta lista.
+            </small>
+        </div>
+
+        <p class="ok" *ngIf="okMsg">{{ okMsg }}</p>
+        <p class="err" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+        <div class="actions">
+            <button type="button" class="btn-out" (click)="onClose()">Cancelar</button>
+            <button type="submit" class="btn-primario" [disabled]="creating || !nombre.trim()">
+                {{ creating ? 'Creando…' : 'Guardar lista privada' }}
+            </button>
+        </div>
+    </form>
+</div>
