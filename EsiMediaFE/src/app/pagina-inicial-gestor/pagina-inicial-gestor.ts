@@ -768,7 +768,10 @@ export class PaginaInicialGestor implements OnInit {
   private pasaEdad(c: Contenido): boolean {
     if (this.filtros.edadMin == null || isNaN(this.filtros.edadMin as any)) return true;
     const restr = Number(c.restringidoEdad ?? 0);
-    return restr >= Number(this.filtros.edadMin);
+    // Mostrar el contenido si su restricción de edad es menor o igual
+    // a la edad seleccionada en el filtro. Es decir: si el contenido
+    // está restringido a >=18 y el filtro es 17, NO se debe mostrar.
+    return restr <= Number(this.filtros.edadMin);
   }
 
   private pasaLista(c: Contenido): boolean {
