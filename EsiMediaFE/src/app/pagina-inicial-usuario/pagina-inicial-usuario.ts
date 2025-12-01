@@ -116,7 +116,6 @@ export class PaginaInicialUsuario implements OnInit {
     tipo: '',
     categoria: '',
     role: '' as '' | 'VIP' | 'STANDARD',
-    ageMode: '' as '' | 'mayores' | 'menores',
     ageValue: null as number | null,
     resolucion: '',
     ordenar: 'fecha' as 'fecha' | 'titulo' | 'reproducciones',
@@ -126,9 +125,10 @@ export class PaginaInicialUsuario implements OnInit {
   tiposDisponibles: string[] = [];
   categoriasDisponibles: string[] = [];
   resolucionesDisponibles: string[] = [];
+  edadesDisponibles = [0, 6, 12, 16, 18];
   onFiltrosChange(): void { this.applyFilter(); this.cdr.markForCheck(); }
   resetFiltros(): void {
-    this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageMode: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
+    this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
     this.applyFilter();
   }
 
@@ -737,7 +737,6 @@ private applyFilter(): void {
     wantCat: this.normalizeTag(f.categoria),
     wantRole: (f.role || '').toUpperCase(),
     wantRes: String(f.resolucion ?? '').trim(),
-    ageMode: f.ageMode,
     ageVal: f.ageValue
   });
 
@@ -779,9 +778,9 @@ private applyFilter(): void {
 
   private matchesFilter(
     c: Contenido,
-    opts: { q: string; wantTipo: string; wantCat: string; wantRole: string; wantRes: string; ageMode: AgeMode; ageVal: number | null }
+    opts: { q: string; wantTipo: string; wantCat: string; wantRole: string; wantRes: string; ageVal: number | null }
   ): boolean {
-    const { q, wantTipo, wantCat, wantRole, wantRes, ageMode, ageVal } = opts;
+    const { q, wantTipo, wantCat, wantRole, wantRes, ageVal } = opts;
 
     const qLower = String(q ?? '').trim().toLowerCase();
     const titleOk = !qLower || (String(c.titulo || '').toLowerCase().includes(qLower));
@@ -797,9 +796,9 @@ private applyFilter(): void {
     const resOk = !wantRes || String(c.resolucion ?? '').trim() === wantRes;
 
     const ageOk = (() => {
-      if (!ageMode || ageVal === null) return true;
+      if (ageVal === null || Number(ageVal) === 0) return true;
       const minAge = Number(c.restringidoEdad ?? 0);
-      return ageMode === 'mayores' ? minAge >= ageVal : minAge <= ageVal;
+        return minAge <= ageVal;
     })();
 
     return titleOk && tipoOk && roleOk && catOk && resOk && ageOk;
@@ -820,8 +819,8 @@ private applyFilter(): void {
     const matchesRole = (c: Contenido) => !wantRole ? true : (wantRole === 'VIP' ? !!c.vip : !c.vip);
     const matchesEdad = (c: Contenido) => {
       const minAge = Number(c.restringidoEdad ?? 0); const v = f.ageValue ?? null;
-      if (!f.ageMode || v === null) return true;
-      return f.ageMode === 'mayores' ? minAge >= v : minAge <= v;
+      if (v === null || Number(v) === 0) return true;
+      return minAge <= v;
     };
     const matchesResolucion = (c: Contenido) => !wantRes || String(c.resolucion ?? '').trim() === wantRes;
     let out = base.filter(matchesText).filter(matchesTipo).filter(matchesCategoria).filter(matchesRole).filter(matchesEdad).filter(matchesResolucion);

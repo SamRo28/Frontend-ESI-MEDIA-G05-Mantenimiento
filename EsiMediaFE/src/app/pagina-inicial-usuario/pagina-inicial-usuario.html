@@ -143,18 +143,14 @@
               </div>
 
               <div class="filter-section">
-                <label>👶 Clasificación por edad</label>
+                <label>🔞 Edad mínima</label>
                 <div class="age-row">
-                  <select name="ageMode"
-                          [(ngModel)]="filtrosContenido.ageMode"
+                  <select name="edadMin"
+                          [(ngModel)]="filtrosContenido.ageValue"
                           (ngModelChange)="onFiltrosChange()">
-                    <option value="">Sin filtro</option>
-                    <option value="mayores">Mayores de… (+X)</option>
-                    <option value="menores">Menores de… (≤X)</option>
+                    <option [ngValue]="null">Sin filtro</option>
+                    <option *ngFor="let e of edadesDisponibles" [ngValue]="e">{{ e === 0 ? 'Cualquiera' : e }}</option>
                   </select>
-                  <input type="number" min="0" name="ageValue"
-                         [(ngModel)]="filtrosContenido.ageValue"
-                         (ngModelChange)="onFiltrosChange()" placeholder="X" />
                 </div>
               </div>
 
