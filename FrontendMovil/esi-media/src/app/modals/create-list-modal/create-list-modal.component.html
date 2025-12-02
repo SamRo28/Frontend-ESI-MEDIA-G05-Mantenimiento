@@ -5,7 +5,11 @@
     (keydown)="handleKeyDown($event)">
 
     <div class="lista-modal__header">
-        <div class="lista-modal__icon">📂</div>
+        <div class="lista-modal__icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+            </svg>
+        </div>
         <div class="lista-modal__titles">
             <h3>Crear lista privada</h3>
             <p class="lista-modal__subtitle">
@@ -13,7 +17,10 @@
             </p>
         </div>
         <button type="button" class="lista-modal__close" (click)="onClose()" aria-label="Cerrar">
-            ✕
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 17.59 13.41 12z" />
+            </svg>
         </button>
     </div>
 
@@ -32,7 +39,14 @@
         </div>
 
         <div class="lista-modal__pill-row">
-            <span class="lista-modal__pill">🔒 Modo privado</span>
+            <span class="lista-modal__pill">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                        d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                </svg>
+                Modo privado
+            </span>
             <small class="lista-modal__hint">
                 Solo tú podrás ver y gestionar esta lista.
             </small>
