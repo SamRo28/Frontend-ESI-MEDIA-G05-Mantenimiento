@@ -81,7 +81,7 @@
       <small class="error-msg" *ngIf="aliasLenError">{{ aliasLenError }}</small>
     </div>
 
-    <div class="fila-fecha" *ngIf="!esAltaCreador && !esAltaAdmin && role !== 'Gestor de Contenido' ">
+    <div class="fila-fecha" *ngIf="!esAltaCreador && !esAltaAdmin">
       <input class="input"
              type="date"
              name="fechaNac"
@@ -98,21 +98,7 @@
       </div>
     </div>
 
-    <ng-container *ngIf="!esAltaCreador && !esAltaAdmin">
-      <select class="input role-select"
-              name="role"
-              [(ngModel)]="role"
-              required
-              #roleModel="ngModel"
-              (ngModelChange)="onRoleChange($event)"
-              [disabled]="roleDisabled"
-              [ngClass]="{ 'input-error': roleModel.invalid && (roleModel.dirty || roleModel.touched), 'input-valid': roleModel.valid && (roleModel.dirty || roleModel.touched) }">
-        <option value="" disabled selected>Selecciona un rol *</option>
-        <option value="usuario">Usuario</option>
-        <option value="Gestor de Contenido">Gestor de Contenido</option>
-      </select>
-      <small class="error-msg" *ngIf="roleModel.invalid && (roleModel.dirty || roleModel.touched)">Selecciona un rol</small>
-    </ng-container>
+    <!-- Rol fijo a 'usuario' en registro público: selector eliminado -->
 
     <div class="role-chip-row" *ngIf="esAltaCreador"><span class="chip-role">Rol: Gestor de Contenido</span></div>
     <div class="role-chip-row" *ngIf="esAltaAdmin"><span class="chip-role chip-role--admin">Rol: Administrador</span></div>
@@ -242,7 +228,7 @@
       </div>
     </div>
 
-    <label class="chkline" *ngIf="!esAltaCreador && !esAltaAdmin && role === 'usuario'">
+    <label class="chkline" *ngIf="!esAltaCreador && !esAltaAdmin">
       <input type="checkbox" [(ngModel)]="vip" name="vip"> ¿Quiere ser VIP?
     </label>
 
