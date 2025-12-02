@@ -117,32 +117,37 @@ body {
   padding-right: 44px;
 }
 
+.input-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #e5e7eb;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
 .toggle-eye {
   position: absolute;
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(51, 65, 85, 0.9);
-  color: #e5e7eb;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  padding: 10px;
-  min-width: 44px;
-  min-height: 44px;
+  padding: 8px;
+  min-width: 36px;
+  min-height: 36px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
-  transition: background 0.2s ease, box-shadow .2s ease, transform .08s ease;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .toggle-eye:hover {
-  background: #020617;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.9);
-  transform: translateY(-50%) translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
 }
-
 
 .strength-wrapper {
   margin-top: 5px;

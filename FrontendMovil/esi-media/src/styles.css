@@ -20,3 +20,14 @@
 
     --z-tooltip: 9999;
 }
+
+/* Global Reset */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #141414;
+    color: #fff;
+}

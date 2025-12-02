@@ -21,7 +21,11 @@
                 <button type="button" (click)="onSelect(avatar)" (keydown.enter)="onSelect(avatar)"
                     [attr.aria-pressed]="selectedAvatar === avatar" [attr.aria-label]="'Elegir avatar ' + avatar">
                     <img [src]="avatar" alt="avatar">
-                    <span class="avatar-check">✓</span>
+                    <span class="avatar-check">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                        </svg>
+                    </span>
                 </button>
             </li>
         </ul>

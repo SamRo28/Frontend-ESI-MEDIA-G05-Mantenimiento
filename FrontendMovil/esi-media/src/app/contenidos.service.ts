@@ -1,18 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from './environments/environment';
 
 export type ResolveResult =
   | { kind: 'external'; url: string }
-  | { kind: 'local';   blobUrl: string; mime: string };
+  | { kind: 'local'; blobUrl: string; mime: string };
 
 type HeaderOpts = {
   id: string;
-  role: string;       
+  role: string;
   email: string;
   vip: boolean;
-  fechaNacISO?: string;  
-  ageYears?: number;  
+  fechaNacISO?: string;
+  ageYears?: number;
 };
 
 export interface RatingResumen {
@@ -42,7 +42,7 @@ export class ContenidosService {
       if (ct.includes('application/json')) {
         const j = await res.json();
         if (j?.message) return String(j.message);
-        if (j?.error)   return String(j.error);
+        if (j?.error) return String(j.error);
       }
       const t = await res.text();
       if (t) {
@@ -77,7 +77,7 @@ export class ContenidosService {
         throw new Error(await this.extractMessage(head, `No disponible (HTTP ${head.status})`));
       }
     } catch {
-      
+
     }
 
     const tiny = await fetch(url, {
@@ -86,8 +86,8 @@ export class ContenidosService {
       redirect: 'manual',
     });
 
-    if (tiny.status === 0) return; 
-    if ([301, 302, 303, 307, 308].includes(tiny.status)) return; 
+    if (tiny.status === 0) return;
+    if ([301, 302, 303, 307, 308].includes(tiny.status)) return;
     if (!tiny.ok) {
       throw new Error(await this.extractMessage(tiny, `No disponible (HTTP ${tiny.status})`));
     }
@@ -98,19 +98,19 @@ export class ContenidosService {
     const headers = this.buildHeaders(opts);
     const base = `${this.BASE}/ReproducirContenido/${encodeURIComponent(opts.id)}`;
 
-    
+
     const metaRes = await fetch(`${base}?meta=1`, { method: 'GET', headers });
     if (!metaRes.ok) {
       throw new Error(await this.extractMessage(metaRes, `No disponible (HTTP ${metaRes.status})`));
     }
-    const meta = await metaRes.json() as { kind: 'external'|'local'; url?: string; mime?: string; length?: number };
+    const meta = await metaRes.json() as { kind: 'external' | 'local'; url?: string; mime?: string; length?: number };
 
-    
+
     if (meta.kind === 'external' && meta.url) {
       return { kind: 'external', url: this.normalizeLocation(meta.url) };
     }
 
-    
+
     const res = await fetch(base, { method: 'GET', headers, redirect: 'follow' });
     if (!res.ok) {
       throw new Error(await this.extractMessage(res, `No se pudo reproducir (HTTP ${res.status})`));
@@ -175,6 +175,11 @@ export class ContenidosService {
     const scorePath = score.toFixed(1);
     const headers = new HttpHeaders({ 'X-User-Email': userEmail });
     return this.http.post<RatingResumen>(`${this.BASE}/ValorarContenido/${id}/${scorePath}`, null, { headers });
+  }
+
+  miValoracion(id: string, userEmail?: string) {
+    const headers = userEmail ? new HttpHeaders({ 'X-User-Email': userEmail }) : undefined;
+    return this.http.get<number>(`${this.BASE}/MiValoracion/${encodeURIComponent(id)}`, { headers, observe: 'response' as const });
   }
 
 }
