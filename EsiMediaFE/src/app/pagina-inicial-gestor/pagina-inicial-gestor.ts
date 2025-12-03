@@ -468,9 +468,16 @@ export class PaginaInicialGestor implements OnInit {
         body.disponibleHasta = this.toLdtFromYmd(body.disponibleHasta); // "YYYY-MM-DDT00:00:00"
       }
 
+      // Log the outgoing payload for debugging (temporary)
+      console.log('[gestor] PUT /ModificarContenido payload ->', body);
+
+      // Use the prepared `body` (with coerced `disponibleHasta`) when calling the API
       const updated = await firstValueFrom(
-        this.contenidos.modificar(this.editing.id, cleanPayload(this.cambios), this.userTipoContenido as TipoContenido)
+        this.contenidos.modificar(this.editing.id, cleanPayload(body), this.userTipoContenido as TipoContenido)
       );
+
+      // Log the server response for debugging (temporary)
+      console.log('[gestor] PUT /ModificarContenido response ->', updated);
       this.replaceInList(updated);
 
       const contenidoId = String(this.editing.id);
@@ -626,23 +633,11 @@ export class PaginaInicialGestor implements OnInit {
     });
   }
 
-  // añadir: variable para trackear si se crea lista desde edición
-  crearListaDesdeEdicion = false;
-
   abrirCrearLista() { this.crearListaAbierto = true; }
-
-  // añadir: abrir crear lista desde el modal de edición de contenido
-  abrirCrearListaDesdeEdicion() {
-    this.crearListaDesdeEdicion = true;
-    this.editContentOpen = false; // cerrar modal de edición para mostrar el de crear lista
-    this.abrirCrearLista();
-  }
-
   cerrarCrearLista() {
     this.crearListaAbierto = false;
     this.nombreListaNueva = '';
     this.descripcionListaNueva = '';
-    this.crearListaDesdeEdicion = false;
   }
 
   toggleLista(listaId: any) {
@@ -658,12 +653,6 @@ export class PaginaInicialGestor implements OnInit {
   getListaNombre(id: any): string {
     const lista = (this.listasPublicas ?? []).find(l => this.idEq(l.id, id));
     return lista ? lista.nombre : 'Desconocido';
-  }
-
-  // añadir: verificar si el contenido actual es el único de la lista
-  esUltimoContenidoDeLista(listaId: any): boolean {
-    const lista = (this.listasPublicas ?? []).find(l => this.idEq(l.id, listaId));
-    return (lista?.contenidosIds?.length ?? 0) <= 1;
   }
 
   isListaSelected(id: any): boolean {
@@ -685,9 +674,7 @@ export class PaginaInicialGestor implements OnInit {
       return;
     }
 
-    // modificar: incluir contenidosIds si se crea desde edición
-    const contenidosIds = this.crearListaDesdeEdicion && this.editing?.id ? [this.editing.id] : [];
-    const nuevaLista = { nombre, descripcion, userEmail: this.userEmail, visibilidad: 'PUBLICA', contenidosIds };
+    const nuevaLista = { nombre, descripcion, userEmail: this.userEmail, visibilidad: 'PUBLICA' };
     this.savingLista = true;
 
     this.http.post('http://localhost:8082/listas', nuevaLista).subscribe({
