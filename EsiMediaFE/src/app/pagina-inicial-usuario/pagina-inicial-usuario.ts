@@ -11,6 +11,7 @@ import { firstValueFrom, Observable, forkJoin, of } from 'rxjs';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { FavoritesService } from '../favorites.service';
+import { AlertasService, UserAlert } from '../alertas.service';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -175,6 +176,13 @@ export class PaginaInicialUsuario implements OnInit {
   userAvatar: string | null = null;
   userVip: boolean = false;
 
+  alertas: UserAlert[] = [];
+  alertasLoading = false;
+  alertasError: string | null = null;
+  alertasEliminando: Record<string, boolean> = {};
+  showAlertas = false;
+  get alertCount(): number { return this.alertas?.length || 0; }
+
   private loggedUser: UserDto | null = null;
   private userAliasActual = '';
 
@@ -240,7 +248,8 @@ export class PaginaInicialUsuario implements OnInit {
     private readonly http: HttpClient,
     private readonly s: DomSanitizer,
     private contenidosSvc: ContenidosService,
-    private favs: FavoritesService
+    private favs: FavoritesService,
+    private alertasSvc: AlertasService
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
@@ -269,6 +278,45 @@ export class PaginaInicialUsuario implements OnInit {
     this.favsLoaded = true;
     if (this.filterMode === 'favoritos') this.applyFilter();
     this.cdr.markForCheck();
+  }
+  cargarAlertas(): void {
+    if (!this.userEmail) return;
+    this.alertasLoading = true;
+    this.alertasError = null;
+    this.alertasSvc.listar(this.userEmail).subscribe({
+      next: (arr) => {
+        this.alertas = arr || [];
+        this.alertasLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        this.alertasLoading = false;
+        this.alertasError = e?.error?.message || e?.message || 'No se pudieron cargar las alertas';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+  toggleAlertasPanel(): void {
+    this.showAlertas = !this.showAlertas;
+    if (this.showAlertas) this.cargarAlertas();
+  }
+  eliminarAlerta(a: UserAlert): void {
+    if (!a || !a.id || this.readOnly || !this.userEmail) return;
+    if (!confirm('¿Eliminar esta alerta?')) return;
+    this.alertasEliminando[a.id] = true;
+    this.alertasSvc.eliminar(this.userEmail, a.id).subscribe({
+      next: () => {
+        this.alertas = this.alertas.filter(x => x.id !== a.id);
+        delete this.alertasEliminando[a.id];
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        delete this.alertasEliminando[a.id];
+        const msg = e?.error?.message || e?.message || 'No se pudo eliminar la alerta';
+        Swal.fire({ icon: 'error', title: 'Buzón', text: msg });
+        this.cdr.markForCheck();
+      }
+    });
   }
   loadFavoritos(): void {
     this.apiListFavIds().subscribe({
@@ -363,6 +411,7 @@ export class PaginaInicialUsuario implements OnInit {
     if (!avatar) this.userInitials = this.initialsFrom(u?.alias || u?.nombre || this.userName);
     this.applyFilter();
     this.cargarListasPublicas();
+    this.cargarAlertas();
     this.cdr.markForCheck();
   }
   private resolveAvatarRaw(u: any): string { return this.t(u?.fotoUrl) || this.t(u?.foto) || this.t(this.model?.foto); }

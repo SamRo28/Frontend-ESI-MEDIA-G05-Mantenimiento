@@ -47,8 +47,9 @@
       </div>
 
       <div class="user-hero-right">
+        <button class="btn-cerrar hero-logout" (click)="CerrarSesion()">Cerrar sesión</button>
+
         <div class="catalog-mode" *ngIf="isUsuario">
-          <span class="catalog-mode-label">Vista</span>
           <div class="catalog-mode-pills">
             <button
               type="button"
@@ -71,6 +72,61 @@
               (click)="filterMode = 'historial'; onFilterChange()">
               🕓 Historial
             </button>
+
+            <div class="alerts-inline">
+              <button type="button"
+                      class="btn-buzon"
+                      (click)="toggleAlertasPanel()"
+                      [disabled]="alertasLoading">
+                Buzon de alertas ({{ alertCount }})
+              </button>
+
+              <div *ngIf="showAlertas" class="alert-dropdown">
+                <div *ngIf="alertasLoading" class="state state--compact">
+                  <div class="spinner spinner--sm"></div>
+                  <span>Cargando alertas.</span>
+                </div>
+
+                <div *ngIf="!alertasLoading && alertasError" class="state state--compact error">
+                  <span>{{ alertasError }}</span>
+                </div>
+
+                <div *ngIf="!alertasLoading && !alertasError && (!alertas || alertas.length === 0)" class="state state--compact">
+                  <span>No hay alertas.</span>
+                </div>
+
+                <ul *ngIf="!alertasLoading && !alertasError && alertas?.length" class="alert-list">
+                  <li *ngFor="let a of alertas" class="alert-item">
+                    <div class="alert-head">
+                      <span class="alert-pill">
+                        {{
+                          a.type === 'NEW_CONTENT'
+                            ? 'NUEVO CONTENIDO'
+                            : a.type === 'CONTENT_EXPIRING'
+                              ? 'CONTENIDO EXPIRA'
+                              : (a.type || 'ALERTA')
+                        }}
+                      </span>
+                      <span class="alert-date">
+                        {{ a.creadaEn | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+                    <div class="alert-body">
+                      <div class="alert-title">{{ a.tituloContenido || a.type || 'Alerta' }}</div>
+                      <p class="alert-msg">{{ a.mensaje || '' }}</p>
+                    </div>
+                    <div class="alert-actions">
+                      <button type="button"
+                              class="btn--ghost alert-del"
+                              [disabled]="alertasEliminando[a.id!]"
+                              (click)="eliminarAlerta(a)">
+                        {{ alertasEliminando[a.id!] ? 'Eliminando.' : 'Eliminar' }}
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <!-- Select real para accesibilidad / teclado -->
@@ -84,8 +140,6 @@
             <option value="historial">🕓 Historial</option>
           </select>
         </div>
-
-        <button class="btn-cerrar hero-logout" (click)="CerrarSesion()">Cerrar sesión</button>
       </div>
     </header>
 
