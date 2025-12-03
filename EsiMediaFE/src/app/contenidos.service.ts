@@ -177,4 +177,9 @@ export class ContenidosService {
     return this.http.post<RatingResumen>(`${this.BASE}/ValorarContenido/${id}/${scorePath}`, null, { headers });
   }
 
+  miValoracion(id: string, userEmail?: string) {
+    const headers = userEmail ? new HttpHeaders({ 'X-User-Email': userEmail }) : undefined;
+    return this.http.get<number>(`${this.BASE}/MiValoracion/${encodeURIComponent(id)}`, { headers, observe: 'response' as const });
+  }
+
 }
