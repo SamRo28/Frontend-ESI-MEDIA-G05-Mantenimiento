@@ -141,6 +141,7 @@ export class PaginaInicialUsuario implements OnInit {
   favsLoaded = false;
   pendingToggle: Record<string, boolean> = {};
   private onlyFavsView = false;
+  private historyIds: string[] = [];
 
   playerOpen = false;
   playerSrc: string | null = null;
@@ -326,14 +327,34 @@ export class PaginaInicialUsuario implements OnInit {
   }
   private setLoggedUser(user: UserDto | null) {
     this.loggedUser = user;
-    if (!user) return;
+    if (!user) {
+      this.historyIds = [];
+      return;
+    }
     this.userName = this.t(user.nombre) || user.email.split('@')[0];
     this.userEmail = user.email;
+    this.loadHistory();
     if (!this.favsLoaded) this.loadFavoritos();
     this.auth.getPerfil(this.userEmail).subscribe({
       next: (u: any) => this.onPerfilLoaded(u),
       error: (_e: HttpErrorResponse) => { this.errorMsg = 'No se pudo cargar tu perfil'; this.cdr.markForCheck(); }
     });
+  }
+  private historyKey(): string { return `history_${this.userEmail || 'anon'}`; }
+  private loadHistory(): void {
+    try {
+      const raw = localStorage.getItem(this.historyKey());
+      this.historyIds = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.historyIds = [];
+    }
+  }
+  private pushToHistory(id: string | null | undefined): void {
+    if (!id) return;
+    this.historyIds = [id, ...this.historyIds.filter(x => x !== id)].slice(0, 50);
+    try { localStorage.setItem(this.historyKey(), JSON.stringify(this.historyIds)); } catch { }
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
   private onPerfilLoaded(u: any) {
     this.paintFromProfile(u);
@@ -635,6 +656,7 @@ export class PaginaInicialUsuario implements OnInit {
     this.openedInternally = true;
     this.openedExternally = false;
     if (isUsuario) this.incrementViews(content);
+    this.pushToHistory(content?.id);
     this.cdr.markForCheck();
   }
 
@@ -648,6 +670,7 @@ export class PaginaInicialUsuario implements OnInit {
     this.playerOpen = true;
     this.openedInternally = true;
     if (isUsuario) this.incrementViews(content);
+    this.pushToHistory(content?.id);
     this.cdr.markForCheck();
   }
 
@@ -711,7 +734,9 @@ private applyFilter(): void {
       const favSet = this.favIds;
       return src.filter(c => favSet.has(c.id));
     } else if (this.filterMode === 'historial') {
-      return src.filter(c => (c.reproducciones ?? 0) > 0);
+      if (!this.historyIds.length) return [];
+      const map = new Map(src.map(c => [c.id, c]));
+      return this.historyIds.map(id => map.get(id)).filter((c): c is Contenido => !!c);
     }
     return src;
   };
