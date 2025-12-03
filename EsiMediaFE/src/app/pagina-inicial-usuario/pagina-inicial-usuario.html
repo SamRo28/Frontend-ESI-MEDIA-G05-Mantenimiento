@@ -98,8 +98,18 @@
                 <ul *ngIf="!alertasLoading && !alertasError && alertas?.length" class="alert-list">
                   <li *ngFor="let a of alertas" class="alert-item">
                     <div class="alert-head">
-                      <span class="alert-pill">{{ a.type || 'Alerta' }}</span>
-                      <span class="alert-date">{{ a.creadaEn || '' }}</span>
+                      <span class="alert-pill">
+                        {{
+                          a.type === 'NEW_CONTENT'
+                            ? 'NUEVO CONTENIDO'
+                            : a.type === 'CONTENT_EXPIRING'
+                              ? 'CONTENIDO EXPIRA'
+                              : (a.type || 'ALERTA')
+                        }}
+                      </span>
+                      <span class="alert-date">
+                        {{ a.creadaEn | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
                     </div>
                     <div class="alert-body">
                       <div class="alert-title">{{ a.tituloContenido || a.type || 'Alerta' }}</div>

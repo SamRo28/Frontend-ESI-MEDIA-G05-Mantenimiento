@@ -166,6 +166,7 @@
 .alert-title{ font-weight:700; font-size:15px; color:#fff; }
 .alert-msg{ margin:4px 0 0 0; color:#c8d2e5; font-size:14px; }
 .alert-actions{ display:flex; justify-content:flex-end; align-items:center; }
+.alert-del{ color:#fff; }
 
 .catalog-mode{
   display:flex;
