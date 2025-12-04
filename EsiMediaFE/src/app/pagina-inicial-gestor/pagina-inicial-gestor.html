@@ -179,7 +179,7 @@
 
             <div class="toolbar-actions">
               <button class="secondary-btn" type="button" (click)="loadContenidos()">⟳ Recargar</button>
-              <button class="secondary-btn" type="button" (click)="abrirCrearLista()" aria-label="Crear lista pública">🗂️ Crear lista pública</button>
+              <!-- modificar: ocultar botón de crear lista vacía, ahora se crea desde el modal de edición -->
               <button class="primary-btn" type="button" (click)="abrirCrear()">➕ Añadir contenido</button>
             </div>
           </div>
@@ -480,7 +480,10 @@
               <div class="tags mt-2" *ngIf="listasSeleccionadas.length">
                 <span class="tag" *ngFor="let id of listasSeleccionadas">
                   {{ getListaNombre(id) }}
-                  <button type="button" class="remove-tag" (click)="toggleLista(id)">×</button>
+                  <button type="button" class="remove-tag" 
+                          (click)="toggleLista(id)" 
+                          [disabled]="esUltimoContenidoDeLista(id)"
+                          [title]="esUltimoContenidoDeLista(id) ? 'No se puede quitar: es el único contenido de la lista' : 'Quitar de esta lista'">×</button>
                 </span>
               </div>
             </div>
@@ -550,18 +553,18 @@
                 <button id="tagsDropdownBtn"
                         class="dropdown-btn"
                         type="button"
-                        (click)="toggleDropdownEdit()"
-                        [class.active]="dropdownOpenEdit"
+                        (click)="toggleDropdown()"
+                        [class.active]="dropdownOpen"
                         aria-haspopup="listbox"
-                        [attr.aria-expanded]="dropdownOpenEdit"
-                        aria-controls="tagsListboxEdit">
+                        [attr.aria-expanded]="dropdownOpen"
+                        aria-controls="tagsListbox">
                   {{ (cambios.tags?.length ?? 0) ? (cambios.tags || []).join(', ') : 'Selecciona tags' }}
                   <span class="arrow">▼</span>
                 </button>
 
-                <div id="tagsListboxEdit"
+                <div id="tagsListbox"
                     class="dropdown-content"
-                    *ngIf="dropdownOpenEdit"
+                    *ngIf="dropdownOpen"
                     role="listbox"
                     aria-multiselectable="true">
                   <div class="tag-category">
@@ -569,16 +572,16 @@
                       <label *ngFor="let tag of availableTags.video"
                             class="tag-option"
                             role="option"
-                            [attr.aria-selected]="isSelectedEdit(tag)">
-                        <input type="checkbox" [checked]="isSelectedEdit(tag)" (change)="toggleTagEdit(tag)" /> {{ tag }}
+                            [attr.aria-selected]="isSelected(tag)">
+                        <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
                     <ng-container *ngIf="userTipoContenido === 'AUDIO'">
                       <label *ngFor="let tag of availableTags.audio"
                             class="tag-option"
                             role="option"
-                            [attr.aria-selected]="isSelectedEdit(tag)">
-                        <input type="checkbox" [checked]="isSelectedEdit(tag)" (change)="toggleTagEdit(tag)" /> {{ tag }}
+                            [attr.aria-selected]="isSelected(tag)">
+                        <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
                   </div>
@@ -599,6 +602,11 @@
                 />
                 <p class="err" *ngIf="disponibleHastaInvalido">La fecha debe ser hoy o posterior.</p>
               </div>
+
+            <!-- añadir: botón para crear lista con este contenido -->
+            <div class="form-row">
+              <button class="secondary-btn" type="button" (click)="abrirCrearListaDesdeEdicion()" aria-label="Crear lista pública con este contenido">🗂️ Crear lista pública con este contenido</button>
+            </div>
 
             <div class="form-row">
               <label for="listasDropdownBtn">Listas</label>
@@ -633,7 +641,10 @@
               <div class="tags mt-2" *ngIf="listasSeleccionadas.length">
                 <span class="tag" *ngFor="let id of listasSeleccionadas">
                   {{ getListaNombre(id) }}
-                  <button type="button" class="remove-tag" (click)="toggleLista(id)">×</button>
+                  <button type="button" class="remove-tag" 
+                          (click)="toggleLista(id)" 
+                          [disabled]="esUltimoContenidoDeLista(id)"
+                          [title]="esUltimoContenidoDeLista(id) ? 'No se puede quitar: es el único contenido de la lista' : 'Quitar de esta lista'">×</button>
                 </span>
               </div>
             </div>
