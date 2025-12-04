@@ -468,9 +468,16 @@ export class PaginaInicialGestor implements OnInit {
         body.disponibleHasta = this.toLdtFromYmd(body.disponibleHasta); // "YYYY-MM-DDT00:00:00"
       }
 
+      // Log the outgoing payload for debugging (temporary)
+      console.log('[gestor] PUT /ModificarContenido payload ->', body);
+
+      // Use the prepared `body` (with coerced `disponibleHasta`) when calling the API
       const updated = await firstValueFrom(
-        this.contenidos.modificar(this.editing.id, cleanPayload(this.cambios), this.userTipoContenido as TipoContenido)
+        this.contenidos.modificar(this.editing.id, cleanPayload(body), this.userTipoContenido as TipoContenido)
       );
+
+      // Log the server response for debugging (temporary)
+      console.log('[gestor] PUT /ModificarContenido response ->', updated);
       this.replaceInList(updated);
 
       const contenidoId = String(this.editing.id);
@@ -768,7 +775,10 @@ export class PaginaInicialGestor implements OnInit {
   private pasaEdad(c: Contenido): boolean {
     if (this.filtros.edadMin == null || isNaN(this.filtros.edadMin as any)) return true;
     const restr = Number(c.restringidoEdad ?? 0);
-    return restr >= Number(this.filtros.edadMin);
+    // Mostrar el contenido si su restricción de edad es menor o igual
+    // a la edad seleccionada en el filtro. Es decir: si el contenido
+    // está restringido a >=18 y el filtro es 17, NO se debe mostrar.
+    return restr <= Number(this.filtros.edadMin);
   }
 
   private pasaLista(c: Contenido): boolean {

@@ -550,18 +550,18 @@
                 <button id="tagsDropdownBtn"
                         class="dropdown-btn"
                         type="button"
-                        (click)="toggleDropdown()"
-                        [class.active]="dropdownOpen"
+                        (click)="toggleDropdownEdit()"
+                        [class.active]="dropdownOpenEdit"
                         aria-haspopup="listbox"
-                        [attr.aria-expanded]="dropdownOpen"
-                        aria-controls="tagsListbox">
+                        [attr.aria-expanded]="dropdownOpenEdit"
+                        aria-controls="tagsListboxEdit">
                   {{ (cambios.tags?.length ?? 0) ? (cambios.tags || []).join(', ') : 'Selecciona tags' }}
                   <span class="arrow">▼</span>
                 </button>
 
-                <div id="tagsListbox"
+                <div id="tagsListboxEdit"
                     class="dropdown-content"
-                    *ngIf="dropdownOpen"
+                    *ngIf="dropdownOpenEdit"
                     role="listbox"
                     aria-multiselectable="true">
                   <div class="tag-category">
@@ -569,16 +569,16 @@
                       <label *ngFor="let tag of availableTags.video"
                             class="tag-option"
                             role="option"
-                            [attr.aria-selected]="isSelected(tag)">
-                        <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
+                            [attr.aria-selected]="isSelectedEdit(tag)">
+                        <input type="checkbox" [checked]="isSelectedEdit(tag)" (change)="toggleTagEdit(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
                     <ng-container *ngIf="userTipoContenido === 'AUDIO'">
                       <label *ngFor="let tag of availableTags.audio"
                             class="tag-option"
                             role="option"
-                            [attr.aria-selected]="isSelected(tag)">
-                        <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
+                            [attr.aria-selected]="isSelectedEdit(tag)">
+                        <input type="checkbox" [checked]="isSelectedEdit(tag)" (change)="toggleTagEdit(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
                   </div>

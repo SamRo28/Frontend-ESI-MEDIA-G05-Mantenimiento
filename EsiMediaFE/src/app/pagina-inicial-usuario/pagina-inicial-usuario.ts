@@ -11,6 +11,7 @@ import { firstValueFrom, Observable, forkJoin, of } from 'rxjs';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { FavoritesService } from '../favorites.service';
+import { AlertasService, UserAlert } from '../alertas.service';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -94,6 +95,8 @@ export class PaginaInicialUsuario implements OnInit {
   crearListaError: string | null = null;
   crearListaOk: string | null = null;
   showCrearListaModal = false;
+  // añadir: contenido para crear lista desde pop-card
+  contenidoParaLista: Contenido | null = null;
 
 
 
@@ -116,7 +119,6 @@ export class PaginaInicialUsuario implements OnInit {
     tipo: '',
     categoria: '',
     role: '' as '' | 'VIP' | 'STANDARD',
-    ageMode: '' as '' | 'mayores' | 'menores',
     ageValue: null as number | null,
     resolucion: '',
     ordenar: 'fecha' as 'fecha' | 'titulo' | 'reproducciones',
@@ -126,9 +128,10 @@ export class PaginaInicialUsuario implements OnInit {
   tiposDisponibles: string[] = [];
   categoriasDisponibles: string[] = [];
   resolucionesDisponibles: string[] = [];
+  edadesDisponibles = [0, 6, 12, 16, 18];
   onFiltrosChange(): void { this.applyFilter(); this.cdr.markForCheck(); }
   resetFiltros(): void {
-    this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageMode: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
+    this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
     this.applyFilter();
   }
 
@@ -139,6 +142,7 @@ export class PaginaInicialUsuario implements OnInit {
   favsLoaded = false;
   pendingToggle: Record<string, boolean> = {};
   private onlyFavsView = false;
+  private historyIds: string[] = [];
 
   playerOpen = false;
   playerSrc: string | null = null;
@@ -171,6 +175,13 @@ export class PaginaInicialUsuario implements OnInit {
   userInitials = '';
   userAvatar: string | null = null;
   userVip: boolean = false;
+
+  alertas: UserAlert[] = [];
+  alertasLoading = false;
+  alertasError: string | null = null;
+  alertasEliminando: Record<string, boolean> = {};
+  showAlertas = false;
+  get alertCount(): number { return this.alertas?.length || 0; }
 
   private loggedUser: UserDto | null = null;
   private userAliasActual = '';
@@ -237,7 +248,8 @@ export class PaginaInicialUsuario implements OnInit {
     private readonly http: HttpClient,
     private readonly s: DomSanitizer,
     private contenidosSvc: ContenidosService,
-    private favs: FavoritesService
+    private favs: FavoritesService,
+    private alertasSvc: AlertasService
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
@@ -266,6 +278,45 @@ export class PaginaInicialUsuario implements OnInit {
     this.favsLoaded = true;
     if (this.filterMode === 'favoritos') this.applyFilter();
     this.cdr.markForCheck();
+  }
+  cargarAlertas(): void {
+    if (!this.userEmail) return;
+    this.alertasLoading = true;
+    this.alertasError = null;
+    this.alertasSvc.listar(this.userEmail).subscribe({
+      next: (arr) => {
+        this.alertas = arr || [];
+        this.alertasLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        this.alertasLoading = false;
+        this.alertasError = e?.error?.message || e?.message || 'No se pudieron cargar las alertas';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+  toggleAlertasPanel(): void {
+    this.showAlertas = !this.showAlertas;
+    if (this.showAlertas) this.cargarAlertas();
+  }
+  eliminarAlerta(a: UserAlert): void {
+    if (!a || !a.id || this.readOnly || !this.userEmail) return;
+    if (!confirm('¿Eliminar esta alerta?')) return;
+    this.alertasEliminando[a.id] = true;
+    this.alertasSvc.eliminar(this.userEmail, a.id).subscribe({
+      next: () => {
+        this.alertas = this.alertas.filter(x => x.id !== a.id);
+        delete this.alertasEliminando[a.id];
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        delete this.alertasEliminando[a.id];
+        const msg = e?.error?.message || e?.message || 'No se pudo eliminar la alerta';
+        Swal.fire({ icon: 'error', title: 'Buzón', text: msg });
+        this.cdr.markForCheck();
+      }
+    });
   }
   loadFavoritos(): void {
     this.apiListFavIds().subscribe({
@@ -324,14 +375,34 @@ export class PaginaInicialUsuario implements OnInit {
   }
   private setLoggedUser(user: UserDto | null) {
     this.loggedUser = user;
-    if (!user) return;
+    if (!user) {
+      this.historyIds = [];
+      return;
+    }
     this.userName = this.t(user.nombre) || user.email.split('@')[0];
     this.userEmail = user.email;
+    this.loadHistory();
     if (!this.favsLoaded) this.loadFavoritos();
     this.auth.getPerfil(this.userEmail).subscribe({
       next: (u: any) => this.onPerfilLoaded(u),
       error: (_e: HttpErrorResponse) => { this.errorMsg = 'No se pudo cargar tu perfil'; this.cdr.markForCheck(); }
     });
+  }
+  private historyKey(): string { return `history_${this.userEmail || 'anon'}`; }
+  private loadHistory(): void {
+    try {
+      const raw = localStorage.getItem(this.historyKey());
+      this.historyIds = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.historyIds = [];
+    }
+  }
+  private pushToHistory(id: string | null | undefined): void {
+    if (!id) return;
+    this.historyIds = [id, ...this.historyIds.filter(x => x !== id)].slice(0, 50);
+    try { localStorage.setItem(this.historyKey(), JSON.stringify(this.historyIds)); } catch { }
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
   private onPerfilLoaded(u: any) {
     this.paintFromProfile(u);
@@ -340,6 +411,7 @@ export class PaginaInicialUsuario implements OnInit {
     if (!avatar) this.userInitials = this.initialsFrom(u?.alias || u?.nombre || this.userName);
     this.applyFilter();
     this.cargarListasPublicas();
+    this.cargarAlertas();
     this.cdr.markForCheck();
   }
   private resolveAvatarRaw(u: any): string { return this.t(u?.fotoUrl) || this.t(u?.foto) || this.t(this.model?.foto); }
@@ -633,6 +705,7 @@ export class PaginaInicialUsuario implements OnInit {
     this.openedInternally = true;
     this.openedExternally = false;
     if (isUsuario) this.incrementViews(content);
+    this.pushToHistory(content?.id);
     this.cdr.markForCheck();
   }
 
@@ -646,6 +719,7 @@ export class PaginaInicialUsuario implements OnInit {
     this.playerOpen = true;
     this.openedInternally = true;
     if (isUsuario) this.incrementViews(content);
+    this.pushToHistory(content?.id);
     this.cdr.markForCheck();
   }
 
@@ -709,7 +783,9 @@ private applyFilter(): void {
       const favSet = this.favIds;
       return src.filter(c => favSet.has(c.id));
     } else if (this.filterMode === 'historial') {
-      return src.filter(c => (c.reproducciones ?? 0) > 0);
+      if (!this.historyIds.length) return [];
+      const map = new Map(src.map(c => [c.id, c]));
+      return this.historyIds.map(id => map.get(id)).filter((c): c is Contenido => !!c);
     }
     return src;
   };
@@ -737,7 +813,6 @@ private applyFilter(): void {
     wantCat: this.normalizeTag(f.categoria),
     wantRole: (f.role || '').toUpperCase(),
     wantRes: String(f.resolucion ?? '').trim(),
-    ageMode: f.ageMode,
     ageVal: f.ageValue
   });
 
@@ -779,9 +854,9 @@ private applyFilter(): void {
 
   private matchesFilter(
     c: Contenido,
-    opts: { q: string; wantTipo: string; wantCat: string; wantRole: string; wantRes: string; ageMode: AgeMode; ageVal: number | null }
+    opts: { q: string; wantTipo: string; wantCat: string; wantRole: string; wantRes: string; ageVal: number | null }
   ): boolean {
-    const { q, wantTipo, wantCat, wantRole, wantRes, ageMode, ageVal } = opts;
+    const { q, wantTipo, wantCat, wantRole, wantRes, ageVal } = opts;
 
     const qLower = String(q ?? '').trim().toLowerCase();
     const titleOk = !qLower || (String(c.titulo || '').toLowerCase().includes(qLower));
@@ -797,9 +872,9 @@ private applyFilter(): void {
     const resOk = !wantRes || String(c.resolucion ?? '').trim() === wantRes;
 
     const ageOk = (() => {
-      if (!ageMode || ageVal === null) return true;
+      if (ageVal === null || Number(ageVal) === 0) return true;
       const minAge = Number(c.restringidoEdad ?? 0);
-      return ageMode === 'mayores' ? minAge >= ageVal : minAge <= ageVal;
+        return minAge <= ageVal;
     })();
 
     return titleOk && tipoOk && roleOk && catOk && resOk && ageOk;
@@ -820,8 +895,8 @@ private applyFilter(): void {
     const matchesRole = (c: Contenido) => !wantRole ? true : (wantRole === 'VIP' ? !!c.vip : !c.vip);
     const matchesEdad = (c: Contenido) => {
       const minAge = Number(c.restringidoEdad ?? 0); const v = f.ageValue ?? null;
-      if (!f.ageMode || v === null) return true;
-      return f.ageMode === 'mayores' ? minAge >= v : minAge <= v;
+      if (v === null || Number(v) === 0) return true;
+      return minAge <= v;
     };
     const matchesResolucion = (c: Contenido) => !wantRes || String(c.resolucion ?? '').trim() === wantRes;
     let out = base.filter(matchesText).filter(matchesTipo).filter(matchesCategoria).filter(matchesRole).filter(matchesEdad).filter(matchesResolucion);
@@ -954,12 +1029,15 @@ private cargarListasPublicas(): void {
     return;
   }
 
+  // modificar: incluir contenido inicial si existe
+  const contenidosIds = this.contenidoParaLista?.id ? [this.contenidoParaLista.id] : [];
+
   const payload: Partial<ListaPublica> = {
     nombre,
     descripcion,
     userEmail: this.userEmail,
     publica: false,                
-    contenidosIds: []
+    contenidosIds
   };
 
   this.creatingList = true;
@@ -978,6 +1056,7 @@ private cargarListasPublicas(): void {
       this.crearListaOk = 'Lista creada correctamente.';
 
       this.showCrearListaModal = false;
+      this.contenidoParaLista = null;
 
       this.cdr.markForCheck();
     },
@@ -1034,6 +1113,15 @@ openCrearListaModal(): void {
 
 closeCrearListaModal(): void {
   this.showCrearListaModal = false;
+  this.contenidoParaLista = null;
+}
+
+// añadir: abrir crear lista desde pop-card de contenido
+abrirCrearListaDesdeContenido(c: Contenido): void {
+  if (this.readOnly || !c) return;
+  this.contenidoParaLista = c;
+  this.detailsOpen.delete(c.id!); // cerrar pop-card
+  this.openCrearListaModal();
 }
 
 }
