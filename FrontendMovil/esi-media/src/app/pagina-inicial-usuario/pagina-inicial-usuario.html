@@ -235,6 +235,7 @@
                   <div class="catalog-frame__title-row">
                     <h2 class="catalog-frame__title">Catálogo</h2>
 
+                    <!-- comentado: ahora las listas se crean desde el contenido
                     <button type="button"
                             *ngIf="isUsuario"
                             class="catalog-addlist-btn"
@@ -243,6 +244,7 @@
                       <span class="icon">➕</span>
                       <span>Lista privada</span>
                     </button>
+                    -->
                   </div>
 
                   <p class="catalog-frame__subtitle">
@@ -363,6 +365,15 @@
                                 title="Valorar"
                                 (click)="toggleRating(c); $event.stopPropagation()">
                           ★
+                        </button>
+
+                        <!-- añadir: botón crear lista con este contenido -->
+                        <button *ngIf="isUsuario && !readOnly"
+                                type="button"
+                                class="lista-add__btn lista-add__btn--lg"
+                                title="Crear lista con este contenido"
+                                (click)="abrirCrearListaDesdeContenido(c); $event.stopPropagation()">
+                          📂 Crear lista privada
                         </button>
                       </div>
 
@@ -631,7 +642,10 @@
     <div class="lista-modal__icon">📂</div>
     <div class="lista-modal__titles">
       <h3>Crear lista privada</h3>
-      <p class="lista-modal__subtitle">
+      <p class="lista-modal__subtitle" *ngIf="contenidoParaLista">
+        Con: <strong>{{ contenidoParaLista.titulo }}</strong>
+      </p>
+      <p class="lista-modal__subtitle" *ngIf="!contenidoParaLista">
         Organiza tus contenidos en una lista visible solo para ti.
       </p>
     </div>
