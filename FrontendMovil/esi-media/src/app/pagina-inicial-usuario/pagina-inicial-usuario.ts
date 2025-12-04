@@ -94,6 +94,8 @@ export class PaginaInicialUsuario implements OnInit {
   crearListaError: string | null = null;
   crearListaOk: string | null = null;
   showCrearListaModal = false;
+  // añadir: contenido para crear lista desde pop-card
+  contenidoParaLista: Contenido | null = null;
 
 
 
@@ -954,12 +956,15 @@ private cargarListasPublicas(): void {
     return;
   }
 
+  // modificar: incluir contenido inicial si existe
+  const contenidosIds = this.contenidoParaLista?.id ? [this.contenidoParaLista.id] : [];
+
   const payload: Partial<ListaPublica> = {
     nombre,
     descripcion,
     userEmail: this.userEmail,
     publica: false,                
-    contenidosIds: []
+    contenidosIds
   };
 
   this.creatingList = true;
@@ -978,6 +983,7 @@ private cargarListasPublicas(): void {
       this.crearListaOk = 'Lista creada correctamente.';
 
       this.showCrearListaModal = false;
+      this.contenidoParaLista = null;
 
       this.cdr.markForCheck();
     },
@@ -1034,6 +1040,15 @@ openCrearListaModal(): void {
 
 closeCrearListaModal(): void {
   this.showCrearListaModal = false;
+  this.contenidoParaLista = null;
+}
+
+// añadir: abrir crear lista desde pop-card de contenido
+abrirCrearListaDesdeContenido(c: Contenido): void {
+  if (this.readOnly || !c) return;
+  this.contenidoParaLista = c;
+  this.detailsOpen.delete(c.id!); // cerrar pop-card
+  this.openCrearListaModal();
 }
 
 }
