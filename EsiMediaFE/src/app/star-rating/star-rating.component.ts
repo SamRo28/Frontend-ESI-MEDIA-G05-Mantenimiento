@@ -35,7 +35,7 @@ export class StarRatingComponent implements OnInit {
   alreadyRated = false;
   errorMsg: string | null = null;
 
-  constructor(private api: ContenidosService) {}
+  constructor(private readonly api: ContenidosService) {}
 
   ngOnInit(): void {
     this.cargarResumen();

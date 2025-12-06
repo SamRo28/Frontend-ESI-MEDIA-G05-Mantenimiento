@@ -179,7 +179,7 @@
 
             <div class="toolbar-actions">
               <button class="secondary-btn" type="button" (click)="loadContenidos()">⟳ Recargar</button>
-              <button class="secondary-btn" type="button" (click)="abrirCrearLista()" aria-label="Crear lista pública">🗂️ Crear lista pública</button>
+              <button class="secondary-btn" type="button" (click)="abrirCrearLista()">🗂️ Crear lista pública</button>
               <button class="primary-btn" type="button" (click)="abrirCrear()">➕ Añadir contenido</button>
             </div>
           </div>
@@ -362,9 +362,28 @@
               </div>
 
               <div *ngIf="userTipoContenido === 'AUDIO'" class="form-row">
-                <label for="ficheroAudio">Url o Fichero de audio <span class="req">*</span></label>
-                <input id="ficheroAudio" type="text" name="ficheroAudio"
-                       [(ngModel)]="nuevo.ficheroAudio" required placeholder="https://...  o /ruta/audio.mp3" />
+                <label>Origen del audio <span class="req">*</span></label>
+                <div class="horizontal-selects" style="gap:12px; align-items:center;">
+                  <label style="display:flex;align-items:center;gap:6px;">
+                    <input type="radio" name="audioSource" value="url" [(ngModel)]="audioSource"> URL
+                  </label>
+                  <label style="display:flex;align-items:center;gap:6px;">
+                    <input type="radio" name="audioSource" value="file" [(ngModel)]="audioSource"> Fichero
+                  </label>
+                </div>
+
+                <div *ngIf="audioSource === 'url'" style="margin-top:8px;">
+                  <input id="ficheroAudio" type="text" name="ficheroAudio"
+                         [(ngModel)]="nuevo.ficheroAudio" required placeholder="https://...  o /ruta/audio.mp3" />
+                </div>
+
+                <div *ngIf="audioSource === 'file'" style="margin-top:8px;">
+                  <input id="audioFileInput" type="file" accept=".mp3,audio/mpeg,audio/mp3" (change)="onAudioFileSelected($event)" />
+                  <div *ngIf="selectedAudioFile" class="info-msg" style="margin-top:6px;">
+                    ✅ {{ selectedAudioFile.name }} — {{ (selectedAudioFile.size / 1024 / 1024).toFixed(2) }} MB
+                  </div>
+                  <div class="err" *ngIf="fileError" style="margin-top:6px;">{{ fileError }}</div>
+                </div>
               </div>
 
               <div *ngIf="userTipoContenido === 'VIDEO'">
@@ -387,21 +406,21 @@
                 </div>
               </div>
 
-              <label for="tagsDropdownBtn">Tags <span class="req">*</span></label>
+              <label for="tagsDropdownBtnCrear">Tags <span class="req">*</span></label>
               <div class="tags-dropdown">
-                <button id="tagsDropdownBtn"
+                <button id="tagsDropdownBtnCrear"
                         class="dropdown-btn"
                         type="button"
                         (click)="toggleDropdown()"
                         [class.active]="dropdownOpen"
                         aria-haspopup="listbox"
                         [attr.aria-expanded]="dropdownOpen"
-                        aria-controls="tagsListbox">
+                        aria-controls="tagsListboxCrear">
                   {{ tagsArray.length ? tagsArray.join(', ') : 'Selecciona tags' }}
                   <span class="arrow">▼</span>
                 </button>
 
-                <div id="tagsListbox"
+                <div id="tagsListboxCrear"
                      class="dropdown-content"
                      *ngIf="dropdownOpen"
                      role="listbox"
@@ -454,21 +473,20 @@
                         class="dropdown-btn"
                         (click)="listasDropdownOpen = !listasDropdownOpen"
                         [class.active]="listasDropdownOpen"
-                        aria-haspopup="listbox"
+                        aria-haspopup="list"
                         [attr.aria-expanded]="listasDropdownOpen"
-                        aria-controls="listasListbox">
+                        aria-controls="listasListboxCrear">
                   {{ getListaNombresSeleccionadas() }}
                   <span class="arrow">▼</span>
                 </button>
 
-                <div id="listasListbox"
+                <div id="listasListboxCrear"
                     class="dropdown-content"
                     *ngIf="listasDropdownOpen"
-                    role="listbox"
-                    aria-multiselectable="true">
+                    role="list">
                   <label *ngFor="let lista of listasPublicas"
                         class="tag-option"
-                        role="option"
+                        role="listitem"
                         [attr.aria-selected]="isListaSelected(lista.id)">
                     <input type="checkbox"
                           [checked]="isListaSelected(lista.id)"
@@ -545,21 +563,21 @@
                   <button type="button" class="clear-img-btn" (click)="cambios.imagen = null">×</button>
                 </div>
               </div>
-              <label for="tagsDropdownBtn">Tags <span class="req">*</span></label>
+              <label for="tagsDropdownBtnEdit">Tags <span class="req">*</span></label>
               <div class="tags-dropdown">
-                <button id="tagsDropdownBtn"
+                <button id="tagsDropdownBtnEdit"
                         class="dropdown-btn"
                         type="button"
                         (click)="toggleDropdown()"
                         [class.active]="dropdownOpen"
                         aria-haspopup="listbox"
                         [attr.aria-expanded]="dropdownOpen"
-                        aria-controls="tagsListbox">
+                        aria-controls="tagsListboxEdit">
                   {{ (cambios.tags?.length ?? 0) ? (cambios.tags || []).join(', ') : 'Selecciona tags' }}
                   <span class="arrow">▼</span>
                 </button>
 
-                <div id="tagsListbox"
+                <div id="tagsListboxEdit"
                     class="dropdown-content"
                     *ngIf="dropdownOpen"
                     role="listbox"
