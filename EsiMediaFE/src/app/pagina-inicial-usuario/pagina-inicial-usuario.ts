@@ -175,6 +175,8 @@ export class PaginaInicialUsuario implements OnInit {
   userInitials = '';
   userAvatar: string | null = null;
   userVip: boolean = false;
+  gustosDisponibles: string[] = [];
+  gustosSeleccionados: string[] = [];
 
   alertas: UserAlert[] = [];
   alertasLoading = false;
@@ -195,7 +197,7 @@ export class PaginaInicialUsuario implements OnInit {
   aliasChecking = false;
   aliasTaken = false;
 
-  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; }> = {};
+  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; misGustos: string[]; }> = {};
   private readonly MAX = { nombre: 100, apellidos: 100, alias: 12 };
   private readonly ALIAS_MIN = 3;
 
@@ -263,6 +265,7 @@ export class PaginaInicialUsuario implements OnInit {
   }
 
   ngOnInit(): void {
+    this.gustosDisponibles = this.DEFAULT_CATEGORIAS.slice();
     this.computeReadOnlyFlags();
     this.bootstrapUser();
     this.cargarContenidos();
@@ -278,6 +281,27 @@ export class PaginaInicialUsuario implements OnInit {
     this.favsLoaded = true;
     if (this.filterMode === 'favoritos') this.applyFilter();
     this.cdr.markForCheck();
+  }
+  private syncGustosDisponibles(): void {
+    const base = (this.categoriasDisponibles && this.categoriasDisponibles.length > 0)
+      ? this.categoriasDisponibles
+      : this.DEFAULT_CATEGORIAS;
+    this.gustosDisponibles = Array.from(new Set(base.map(t => t?.toString()?.trim()).filter(Boolean))) as string[];
+  }
+  isGusto(tag: string): boolean {
+    const norm = this.normalizeTag(tag);
+    return this.gustosSeleccionados.some(t => this.normalizeTag(t) === norm);
+  }
+  toggleGusto(tag: string, checked: boolean): void {
+    const clean = this.normalizeTag(tag);
+    if (!clean) return;
+    if (checked) {
+      if (!this.gustosSeleccionados.some(t => this.normalizeTag(t) === clean)) {
+        this.gustosSeleccionados = [...this.gustosSeleccionados, clean];
+      }
+    } else {
+      this.gustosSeleccionados = this.gustosSeleccionados.filter(t => this.normalizeTag(t) !== clean);
+    }
   }
   cargarAlertas(): void {
     if (!this.userEmail) return;
@@ -423,7 +447,15 @@ export class PaginaInicialUsuario implements OnInit {
     const fullName = `${nombre} ${apellidos}`.trim();
     this.userName = this.t(u?.alias) || fullName || u?.email || this.userName;
     this.userInitials = this.initialsFrom(this.t(u?.alias) || fullName || u?.email || '');
-    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip };
+    const gustosRaw = Array.isArray(u?.misGustos)
+      ? u.misGustos
+      : typeof u?.misGustos === 'string'
+        ? u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean)
+        : [];
+    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip, misGustos: Array.isArray(gustosRaw) ? gustosRaw : [] };
+    this.gustosSeleccionados = gustosRaw
+      .map((g: string) => this.normalizeTag(g))
+      .filter(Boolean);
   }
   salirModoLectura(): void { localStorage.removeItem('users_readonly_mode'); localStorage.removeItem('users_readonly_from_admin'); this.router.navigateByUrl('/admin'); }
   CerrarSesion(): void {
@@ -478,7 +510,8 @@ export class PaginaInicialUsuario implements OnInit {
         email: this.userEmail, alias: aliasAEnviar, nombre: this.t(this.model?.nombre) || undefined, apellidos: this.t(this.model?.apellidos) || undefined,
         fechaNac: this.model?.fechaNac ? String(this.model.fechaNac).slice(0, 10) : undefined,
         vip: typeof this.model?.vip === 'boolean' ? this.model.vip : undefined,
-        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada
+        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada,
+        misGustos: this.gustosSeleccionados
       };
       const payload = this.cleanPayload(raw);
       this.auth.putPerfil(payload).subscribe({
@@ -582,6 +615,7 @@ export class PaginaInicialUsuario implements OnInit {
         this.tiposDisponibles = this.DEFAULT_TIPOS.slice();
         this.categoriasDisponibles = this.DEFAULT_CATEGORIAS.slice();
         this.resolucionesDisponibles = this.DEFAULT_RESOLUCIONES.slice();
+        this.syncGustosDisponibles();
         this.contenidosLoading = false;
         if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos();
         this.applyFilter();
@@ -880,7 +914,13 @@ private applyFilter(): void {
     return titleOk && tipoOk && roleOk && catOk && resOk && ageOk;
   }
 
-  private normalizeTag(t: unknown): string { return String(t ?? '').trim().toLowerCase(); }
+  private normalizeTag(t: unknown): string {
+    const raw = String(t ?? '').trim().toLowerCase();
+    return raw
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[^a-z0-9]+/g, '');
+  }
   private applyFrontFilters(): void {
     const base = this.catalogBackup ?? [];
     const f = this.filtrosContenido;
