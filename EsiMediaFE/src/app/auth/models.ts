@@ -57,6 +57,7 @@ export interface AppUser {
   fotoUrl?: string | null;
   foto?: string | null;
   departamento?: string;
+  misGustos?: string[];
 }
 
 export interface CreatorDto extends AppUser {}

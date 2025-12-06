@@ -550,6 +550,20 @@
           <input type="checkbox" [(ngModel)]="model.vip" name="vip" (ngModelChange)="onVipChanged($event)" />
         </label>
       </div>
+      <div class="row">
+        <label>Mis gustos</label>
+        <div class="chips-select" *ngIf="gustosDisponibles?.length; else noTags">
+          <label class="chip-option" *ngFor="let tag of gustosDisponibles">
+            <input type="checkbox"
+                   [checked]="isGusto(tag)"
+                   (change)="toggleGusto(tag, $event.target.checked)" />
+            <span>{{ tag }}</span>
+          </label>
+        </div>
+        <ng-template #noTags>
+          <small class="hint">No hay tags disponibles.</small>
+        </ng-template>
+      </div>
 
       <div class="Avatar">
         <label for="elegirAvatar">Avatar</label>
