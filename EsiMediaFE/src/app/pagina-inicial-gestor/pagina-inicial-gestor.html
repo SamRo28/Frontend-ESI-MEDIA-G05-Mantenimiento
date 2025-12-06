@@ -498,7 +498,10 @@
               <div class="tags mt-2" *ngIf="listasSeleccionadas.length">
                 <span class="tag" *ngFor="let id of listasSeleccionadas">
                   {{ getListaNombre(id) }}
-                  <button type="button" class="remove-tag" (click)="toggleLista(id)">×</button>
+                  <button type="button" class="remove-tag" 
+                          (click)="toggleLista(id)" 
+                          [disabled]="esUltimoContenidoDeLista(id)"
+                          [title]="esUltimoContenidoDeLista(id) ? 'No se puede quitar: es el único contenido de la lista' : 'Quitar de esta lista'">×</button>
                 </span>
               </div>
             </div>
@@ -618,6 +621,11 @@
                 <p class="err" *ngIf="disponibleHastaInvalido">La fecha debe ser hoy o posterior.</p>
               </div>
 
+            <!-- añadir: botón para crear lista con este contenido -->
+            <div class="form-row">
+              <button class="secondary-btn" type="button" (click)="abrirCrearListaDesdeEdicion()" aria-label="Crear lista pública con este contenido">🗂️ Crear lista pública con este contenido</button>
+            </div>
+
             <div class="form-row">
               <label for="listasDropdownBtn">Listas</label>
               <div class="tags-dropdown">
@@ -651,7 +659,10 @@
               <div class="tags mt-2" *ngIf="listasSeleccionadas.length">
                 <span class="tag" *ngFor="let id of listasSeleccionadas">
                   {{ getListaNombre(id) }}
-                  <button type="button" class="remove-tag" (click)="toggleLista(id)">×</button>
+                  <button type="button" class="remove-tag" 
+                          (click)="toggleLista(id)" 
+                          [disabled]="esUltimoContenidoDeLista(id)"
+                          [title]="esUltimoContenidoDeLista(id) ? 'No se puede quitar: es el único contenido de la lista' : 'Quitar de esta lista'">×</button>
                 </span>
               </div>
             </div>
