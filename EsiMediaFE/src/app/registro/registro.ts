@@ -18,7 +18,7 @@ const ALIAS_MIN = 3;
 const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 type MfaChoice = 'NONE' | 'EMAIL_OTP' | 'TOTP';
 
-const DEFAULT_GUSTOS = ['AcciÇün','Comedia','Drama','Suspenso','AnimaciÇün','Ciencia FicciÇün','Terror','Documental','Romance','Aventura'];
+const DEFAULT_GUSTOS = ['Acción','Comedia','Drama','Suspenso','Animación','Ciencia Ficción','Terror','Documental','Romance','Aventura'];
 
 const trim = (s: string) => (s || '').trim();
 const lower = (s: string) => trim(s).toLowerCase();
