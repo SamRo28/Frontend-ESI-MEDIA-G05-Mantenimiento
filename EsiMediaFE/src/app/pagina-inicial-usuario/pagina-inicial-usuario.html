@@ -47,8 +47,9 @@
       </div>
 
       <div class="user-hero-right">
+        <button class="btn-cerrar hero-logout" (click)="CerrarSesion()">Cerrar sesión</button>
+
         <div class="catalog-mode" *ngIf="isUsuario">
-          <span class="catalog-mode-label">Vista</span>
           <div class="catalog-mode-pills">
             <button
               type="button"
@@ -71,6 +72,61 @@
               (click)="filterMode = 'historial'; onFilterChange()">
               🕓 Historial
             </button>
+
+            <div class="alerts-inline">
+              <button type="button"
+                      class="btn-buzon"
+                      (click)="toggleAlertasPanel()"
+                      [disabled]="alertasLoading">
+                Buzon de alertas ({{ alertCount }})
+              </button>
+
+              <div *ngIf="showAlertas" class="alert-dropdown">
+                <div *ngIf="alertasLoading" class="state state--compact">
+                  <div class="spinner spinner--sm"></div>
+                  <span>Cargando alertas.</span>
+                </div>
+
+                <div *ngIf="!alertasLoading && alertasError" class="state state--compact error">
+                  <span>{{ alertasError }}</span>
+                </div>
+
+                <div *ngIf="!alertasLoading && !alertasError && (!alertas || alertas.length === 0)" class="state state--compact">
+                  <span>No hay alertas.</span>
+                </div>
+
+                <ul *ngIf="!alertasLoading && !alertasError && alertas?.length" class="alert-list">
+                  <li *ngFor="let a of alertas" class="alert-item">
+                    <div class="alert-head">
+                      <span class="alert-pill">
+                        {{
+                          a.type === 'NEW_CONTENT'
+                            ? 'NUEVO CONTENIDO'
+                            : a.type === 'CONTENT_EXPIRING'
+                              ? 'CONTENIDO EXPIRA'
+                              : (a.type || 'ALERTA')
+                        }}
+                      </span>
+                      <span class="alert-date">
+                        {{ a.creadaEn | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+                    <div class="alert-body">
+                      <div class="alert-title">{{ a.tituloContenido || a.type || 'Alerta' }}</div>
+                      <p class="alert-msg">{{ a.mensaje || '' }}</p>
+                    </div>
+                    <div class="alert-actions">
+                      <button type="button"
+                              class="btn--ghost alert-del"
+                              [disabled]="alertasEliminando[a.id!]"
+                              (click)="eliminarAlerta(a)">
+                        {{ alertasEliminando[a.id!] ? 'Eliminando.' : 'Eliminar' }}
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <!-- Select real para accesibilidad / teclado -->
@@ -84,8 +140,6 @@
             <option value="historial">🕓 Historial</option>
           </select>
         </div>
-
-        <button class="btn-cerrar hero-logout" (click)="CerrarSesion()">Cerrar sesión</button>
       </div>
     </header>
 
@@ -143,18 +197,14 @@
               </div>
 
               <div class="filter-section">
-                <label>👶 Clasificación por edad</label>
+                <label>🔞 Edad mínima</label>
                 <div class="age-row">
-                  <select name="ageMode"
-                          [(ngModel)]="filtrosContenido.ageMode"
+                  <select name="edadMin"
+                          [(ngModel)]="filtrosContenido.ageValue"
                           (ngModelChange)="onFiltrosChange()">
-                    <option value="">Sin filtro</option>
-                    <option value="mayores">Mayores de… (+X)</option>
-                    <option value="menores">Menores de… (≤X)</option>
+                    <option [ngValue]="null">Sin filtro</option>
+                    <option *ngFor="let e of edadesDisponibles" [ngValue]="e">{{ e === 0 ? 'Cualquiera' : e }}</option>
                   </select>
-                  <input type="number" min="0" name="ageValue"
-                         [(ngModel)]="filtrosContenido.ageValue"
-                         (ngModelChange)="onFiltrosChange()" placeholder="X" />
                 </div>
               </div>
 
@@ -452,6 +502,7 @@
   <div class="edit-panel modal" [class.open]="editOpen" (click)="$event.stopPropagation()" (keydown)="handleKeyDown($event)">
     <h3>Editar perfil</h3>
 
+    <div class="form-scroll">
     <form (ngSubmit)="guardarCambios()">
       <div class="row">
         <label class="label-lock" for="email_ro">
@@ -527,6 +578,7 @@
 
       </div>
     </form>
+    </div>
   </div>
 
   <div

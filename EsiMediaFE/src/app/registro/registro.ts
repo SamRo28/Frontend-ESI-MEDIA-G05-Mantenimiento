@@ -102,7 +102,7 @@ export class Registro implements OnInit, OnDestroy {
 
   get esAltaCreador()   { return this.rolFijo === 'GESTOR_CONTENIDO' || this.modoAdminCreador === true; }
   get esAltaAdmin()     { return this.rolFijo === 'ADMINISTRADOR'; }
-  get isGestor()        { return this.esAltaCreador || this.role === 'Gestor de Contenido'; }
+  get isGestor()        { return this.esAltaCreador; }
   get showPasswordFields() { return this.esAltaAdmin ? this.pedirPwdAdmin : true; }
   get hasPwd()          { return trim(this.pwd).length > 0; }
   get roleDisabled()    { return !!this.rolFijo; }
