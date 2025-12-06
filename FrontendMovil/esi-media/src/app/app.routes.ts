@@ -4,11 +4,10 @@ import { LoginComponent } from './auth/login';
 import { Registro } from './registro/registro';
 import { RecoverPassword } from './auth/recover-password/recover-password';
 import { ResetPassword } from './auth/reset-password/reset-password';
-import { PaginaInicialAdmin } from './pagina-inicial-admin/pagina-inicial-admin';
+
 import { PaginaInicialUsuario } from './pagina-inicial-usuario/pagina-inicial-usuario';
-import { PaginaInicialGestor } from './pagina-inicial-gestor/pagina-inicial-gestor';
+
 import { roleGuard, userOrReadOnlyGuard } from './auth/auth.guard';
-import { StatsPageComponent } from './stats/stats-page.component';
 
 export const routes: Routes = [
   {
@@ -23,17 +22,8 @@ export const routes: Routes = [
     ],
   },
 
-  {
-    path: 'stats',
-    component: StatsPageComponent,
-    canActivate: [roleGuard(['ADMINISTRADOR', 'GESTOR_CONTENIDO'])],
-  },
 
-  {
-    path: 'admin',
-    canActivate: [roleGuard(['ADMINISTRADOR'])],
-    component: PaginaInicialAdmin,
-  },
+
 
   {
     path: 'usuario',
@@ -46,11 +36,6 @@ export const routes: Routes = [
     component: PaginaInicialUsuario,
   },
 
-  {
-    path: 'gestor',
-    canActivate: [roleGuard(['GESTOR_CONTENIDO'])],
-    component: PaginaInicialGestor,
-  },
 
   { path: '', redirectTo: 'auth', pathMatch: 'full' },
   { path: '**', redirectTo: 'auth' },

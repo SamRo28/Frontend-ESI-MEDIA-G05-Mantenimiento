@@ -1,0 +1,33 @@
+/* Global Z-Index Variables */
+:root {
+    --z-base: 0;
+    --z-layer-1: 1;
+    --z-layer-2: 2;
+    --z-layer-5: 5;
+    --z-layer-10: 10;
+
+    --z-header: 80;
+    --z-header-sticky: 90;
+    --z-header-dropdown: 95;
+    --z-header-max: 100;
+    --z-sticky-max: 110;
+
+    --z-modal-backdrop: 1000;
+    --z-modal-content: 1100;
+
+    --z-player-modal: 1400;
+    --z-player-overlay: 1401;
+
+    --z-tooltip: 9999;
+}
+
+/* Global Reset */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #141414;
+    color: #fff;
+}

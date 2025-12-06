@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from './environments/environment';
 
 export type RoleUI = 'usuario' | 'Gestor de Contenido' | 'Administrador';
 export type TipoContenido = 'Audio' | 'Video';
@@ -35,7 +36,7 @@ const ROLE_TO_API: Record<RoleUI, 'USUARIO' | 'GESTOR_CONTENIDO' | 'ADMINISTRADO
 const tipoToApi = (v?: TipoContenido): 'AUDIO' | 'VIDEO' | undefined =>
   !v ? undefined : v.toUpperCase() === 'VIDEO' ? 'VIDEO' : 'AUDIO';
 
-const basePayload = (d: Pick<RegistroDatos, 'nombre'|'apellidos'|'email'|'alias'|'fechaNac'|'pwd'|'pwd2'|'vip'|'foto'|'role'>) => ({
+const basePayload = (d: Pick<RegistroDatos, 'nombre' | 'apellidos' | 'email' | 'alias' | 'fechaNac' | 'pwd' | 'pwd2' | 'vip' | 'foto' | 'role'>) => ({
   nombre: d.nombre,
   apellidos: d.apellidos,
   email: d.email,
@@ -50,14 +51,14 @@ const basePayload = (d: Pick<RegistroDatos, 'nombre'|'apellidos'|'email'|'alias'
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  private readonly baseUrl = 'http://localhost:8081/users';
-  private readonly registrarUrl   = `${this.baseUrl}/Registrar`;
-  private readonly forgotUrl      = `${this.baseUrl}/forgot-password`;
-  private readonly checkAliasUrl  = `${this.baseUrl}/check-alias`;
-  private readonly crearCreadorUrl= `${this.baseUrl}/admin/creators`;
-  private readonly adminsBaseUrl  = `${this.baseUrl}/admin/admins`;
+  private readonly baseUrl = `http://${environment.apiHost}:8081/users`;
+  private readonly registrarUrl = `${this.baseUrl}/Registrar`;
+  private readonly forgotUrl = `${this.baseUrl}/forgot-password`;
+  private readonly checkAliasUrl = `${this.baseUrl}/check-alias`;
+  private readonly crearCreadorUrl = `${this.baseUrl}/admin/creators`;
+  private readonly adminsBaseUrl = `${this.baseUrl}/admin/admins`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   listAllUsers(): Observable<any[]> {
     return this.http.get<any[]>(this.baseUrl);
@@ -83,7 +84,7 @@ export class UsersService {
     }
 
     if (datos.role === 'Gestor de Contenido') {
-      payload.descripcion  = trim(datos.descripcion);
+      payload.descripcion = trim(datos.descripcion);
       payload.especialidad = trim(datos.especialidad);
       const tc = tipoToApi(datos.tipoContenido ?? 'Audio');
       if (tc) payload.tipoContenido = tc;
@@ -110,7 +111,7 @@ export class UsersService {
     if (tc) payload.tipoContenido = tc;
 
     return this.http.post(this.crearCreadorUrl, payload);
-    }
+  }
 
   updateAdmin(id: string, dto: any): Observable<any> {
     return this.http.patch<any>(`${this.adminsBaseUrl}/${e(id)}`, dto);

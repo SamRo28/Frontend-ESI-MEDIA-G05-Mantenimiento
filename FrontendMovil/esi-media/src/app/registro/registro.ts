@@ -27,7 +27,7 @@ const over = (v: string, max: number) => !!v && v.length > max;
 const oneOf = <T extends string>(v: T, list: readonly T[]) => list.includes(v);
 const bool = (b: any) => !!b;
 
-const showAlert = (title: string, text: string, icon: 'error'|'info'|'warning'|'success') =>
+const showAlert = (title: string, text: string, icon: 'error' | 'info' | 'warning' | 'success') =>
   Swal.fire({ title, html: text, icon, confirmButtonText: 'Cerrar' });
 
 const makeDebouncer = () => {
@@ -43,16 +43,16 @@ const makeDebouncer = () => {
 async function sha1ForHIBP(text: string): Promise<string> {
   const data = new TextEncoder().encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 }
 async function checkPasswordPwned(password: string): Promise<number> {
   if (!password) return 0;
-  const full = await sha1ForHIBP(password), pref = full.slice(0,5), suf = full.slice(5);
+  const full = await sha1ForHIBP(password), pref = full.slice(0, 5), suf = full.slice(5);
   const res = await fetch(`https://api.pwnedpasswords.com/range/${pref}`, { headers: { 'Add-Padding': 'true' } });
   if (!res.ok) throw new Error('Fallo consultando diccionario online');
   for (const line of (await res.text()).split('\n')) {
     const [hashSuffix, countStr] = line.trim().split(':');
-    if ((hashSuffix||'').toUpperCase() === suf) return parseInt((countStr||'').replace(/\D/g,''),10) || 0;
+    if ((hashSuffix || '').toUpperCase() === suf) return parseInt((countStr || '').replace(/\D/g, ''), 10) || 0;
   }
   return 0;
 }
@@ -91,21 +91,21 @@ export class Registro implements OnInit, OnDestroy {
   emailUnique: boolean | null = null; emailCheckedFor = ''; isCheckingEmail = false;
 
   avatars: string[] = [
-    'assets/avatars/avatar1.png','assets/avatars/avatar2.png','assets/avatars/avatar3.png',
-    'assets/avatars/avatar4.png','assets/avatars/avatar5.png','assets/avatars/avatar6.png'
+    'assets/avatars/avatar1.png', 'assets/avatars/avatar2.png', 'assets/avatars/avatar3.png',
+    'assets/avatars/avatar4.png', 'assets/avatars/avatar5.png', 'assets/avatars/avatar6.png'
   ];
   selectedAvatar: string | null = null; showAvatarModal = false;
   trackAvatar = (_: number, src: string) => src;
 
-  constructor(private readonly usersService: UsersService, private readonly router: Router) {}
+  constructor(private readonly usersService: UsersService, private readonly router: Router) { }
   private readonly debouncer = makeDebouncer();
 
-  get esAltaCreador()   { return this.rolFijo === 'GESTOR_CONTENIDO' || this.modoAdminCreador === true; }
-  get esAltaAdmin()     { return this.rolFijo === 'ADMINISTRADOR'; }
-  get isGestor()        { return this.esAltaCreador || this.role === 'Gestor de Contenido'; }
+  get esAltaCreador() { return this.rolFijo === 'GESTOR_CONTENIDO' || this.modoAdminCreador === true; }
+  get esAltaAdmin() { return this.rolFijo === 'ADMINISTRADOR'; }
+  get isGestor() { return this.esAltaCreador || this.role === 'Gestor de Contenido'; }
   get showPasswordFields() { return this.esAltaAdmin ? this.pedirPwdAdmin : true; }
-  get hasPwd()          { return trim(this.pwd).length > 0; }
-  get roleDisabled()    { return !!this.rolFijo; }
+  get hasPwd() { return trim(this.pwd).length > 0; }
+  get roleDisabled() { return !!this.rolFijo; }
 
   get ageYears(): number | null {
     if (!this.fechaNac) return null;
@@ -114,8 +114,8 @@ export class Registro implements OnInit, OnDestroy {
     if (t.getMonth() < d.getMonth() || (t.getMonth() === d.getMonth() && t.getDate() < d.getDate())) a--;
     return a;
   }
-  get isUnder4()       { const a = this.ageYears; return a !== null && a < 4; }
-  get fechaInvalida()  { return !(this.esAltaAdmin || this.esAltaCreador) && !!this.fechaNac && new Date(this.fechaNac) > new Date(); }
+  get isUnder4() { const a = this.ageYears; return a !== null && a < 4; }
+  get fechaInvalida() { return !(this.esAltaAdmin || this.esAltaCreador) && !!this.fechaNac && new Date(this.fechaNac) > new Date(); }
 
   get pwdIssues(): string[] {
     if (!this.showPasswordFields) return [];
@@ -131,7 +131,7 @@ export class Registro implements OnInit, OnDestroy {
   get pwdScore() {
     if (!this.showPasswordFields) return 0;
     const p = this.pwd;
-    return Math.min(4, [p.length>=8, /[A-Z]/.test(p), /[a-z]/.test(p), /\d/.test(p), /[!@#$%^&*(),.?":{}|<>]/.test(p)].filter(bool).length);
+    return Math.min(4, [p.length >= 8, /[A-Z]/.test(p), /[a-z]/.test(p), /\d/.test(p), /[!@#$%^&*(),.?":{}|<>]/.test(p)].filter(bool).length);
   }
   get pwdStrengthLabel() {
     if (!this.showPasswordFields) return '';
@@ -149,23 +149,23 @@ export class Registro implements OnInit, OnDestroy {
   get emailPatternError(): string | null {
     const v = trim(this.email); return v && !EMAIL_RE.test(v) ? 'Email no válido' : null;
   }
-  get avatarError(): string | null {if (this.esAltaCreador) {return this.selectedAvatar ? null : 'Debes seleccionar un avatar.';}return null;}
-  get deptoError(): string | null  { return this.esAltaAdmin && isBlank(this.departamento) ? 'El departamento es obligatorio.' : null; }
+  get avatarError(): string | null { if (this.esAltaCreador) { return this.selectedAvatar ? null : 'Debes seleccionar un avatar.'; } return null; }
+  get deptoError(): string | null { return this.esAltaAdmin && isBlank(this.departamento) ? 'El departamento es obligatorio.' : null; }
   get especialidadError(): string | null {
     return this.isGestor && this.rolSeleccionado && isBlank(this.especialidad) && this.tipoContenidoTouched ? 'Falta la especialidad.' : null;
   }
   get tipoContenidoError(): string | null {
-    return this.tipoContenidoTouched && !oneOf(this.tipoContenido, ['Audio','Video',''] as const) ? 'Selecciona Audio o Video.' : null;
+    return this.tipoContenidoTouched && !oneOf(this.tipoContenido, ['Audio', 'Video', ''] as const) ? 'Selecciona Audio o Video.' : null;
   }
 
-  get nombreLenLeft()        { return MAX.nombre        - this.nombre.length; }
-  get apellidosLenLeft()     { return MAX.apellidos     - this.apellidos.length; }
-  get emailLenLeft()         { return MAX.email         - this.email.length; }
-  get aliasLenLeft()         { return MAX.alias         - this.alias.length; }
-  get deptoLenLeft()         { return MAX.departamento  - this.departamento.length; }
-  get especialidadLenLeft()  { return MAX.especialidad  - this.especialidad.length; }
-  get descripcionLenLeft()   { return MAX.descripcion   - this.descripcion.length; }
-  
+  get nombreLenLeft() { return MAX.nombre - this.nombre.length; }
+  get apellidosLenLeft() { return MAX.apellidos - this.apellidos.length; }
+  get emailLenLeft() { return MAX.email - this.email.length; }
+  get aliasLenLeft() { return MAX.alias - this.alias.length; }
+  get deptoLenLeft() { return MAX.departamento - this.departamento.length; }
+  get especialidadLenLeft() { return MAX.especialidad - this.especialidad.length; }
+  get descripcionLenLeft() { return MAX.descripcion - this.descripcion.length; }
+
   get validationSummary(): string[] {
     const t = this;
     const msgs: string[] = [];
@@ -204,7 +204,7 @@ export class Registro implements OnInit, OnDestroy {
   }
   ngOnDestroy() { this.debouncer.clearAll(); }
 
-  togglePwd()  { if (this.showPasswordFields) this.showPwd  = !this.showPwd; }
+  togglePwd() { if (this.showPasswordFields) this.showPwd = !this.showPwd; }
   togglePwd2() { if (this.showPasswordFields) this.showPwd2 = !this.showPwd2; }
   openAvatarModal() { this.showAvatarModal = true; }
   closeAvatarModal() { this.showAvatarModal = false; }
@@ -327,7 +327,7 @@ export class Registro implements OnInit, OnDestroy {
   private async preflightValidate(form: NgForm, now: number): Promise<string | null> {
     if (now - this.lastSubmitAt < 5000) return 'Espera unos segundos antes de volver a intentarlo.';
     const lengthError = this.checkLengths(); if (lengthError) return lengthError;
-    if (this.esAltaCreador && !this.foto) {return 'Debes seleccionar una foto de perfil (obligatoria).';}
+    if (this.esAltaCreador && !this.foto) { return 'Debes seleccionar una foto de perfil (obligatoria).'; }
     const ageMsg = this.validateAge(); if (ageMsg) return ageMsg;
     if (this.fechaInvalida) return 'La fecha no puede ser futura.';
     await this.ensureUnique('email', this.email);
@@ -338,7 +338,7 @@ export class Registro implements OnInit, OnDestroy {
 
     if (this.isGestor) {
       this.aliasTouched = this.especialidadTouched = this.tipoContenidoTouched = true;
-      if (isBlank(this.especialidad) || !oneOf(this.tipoContenido, ['Audio','Video',''] as const)) {
+      if (isBlank(this.especialidad) || !oneOf(this.tipoContenido, ['Audio', 'Video', ''] as const)) {
         return 'Para Gestor de Contenido, especialidad y tipo de contenido (Audio/Video) son obligatorios.';
       }
       this.descripcion = trim(this.descripcion);

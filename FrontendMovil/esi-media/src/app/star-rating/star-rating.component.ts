@@ -26,8 +26,8 @@ export class StarRatingComponent implements OnInit {
 
   stars = [1, 2, 3, 4, 5];
 
-  hoverValue: number | null = null;   
-  userValue: number | null = null;    
+  hoverValue: number | null = null;
+  userValue: number | null = null;
 
   avg = 0;
   count = 0;
@@ -35,10 +35,42 @@ export class StarRatingComponent implements OnInit {
   alreadyRated = false;
   errorMsg: string | null = null;
 
-  constructor(private api: ContenidosService) {}
+  constructor(private api: ContenidosService) { }
 
   ngOnInit(): void {
     this.cargarResumen();
+    this.cargarMiValor();
+  }
+
+  cargarMiValor(): void {
+    if (!this.userEmail) return;
+    try {
+      this.api.miValoracion(this.contentId, this.userEmail).subscribe({
+        next: (resp: any) => {
+          if (resp && resp.status === 200) {
+            this.userValue = resp.body ?? null;
+            if (this.userValue != null) {
+              this.alreadyRated = true;
+              this.hoverValue = null;
+            }
+          } else if (resp && resp.status === 204) {
+            this.userValue = null;
+            this.alreadyRated = false;
+          }
+        },
+        error: (err: any) => {
+          if (err?.status === 401 || err?.status === 403) {
+            this.errorMsg = 'Debes iniciar sesión para ver tu valoración';
+          } else if (err?.status === 404) {
+            this.errorMsg = 'Contenido no encontrado';
+          } else {
+            this.errorMsg = 'No se pudo cargar tu valoración';
+          }
+        }
+      });
+    } catch {
+      /* ignore */
+    }
   }
 
   cargarResumen(): void {
@@ -72,14 +104,14 @@ export class StarRatingComponent implements OnInit {
     if (!el) return this.currentValue;
 
     const rect = el.getBoundingClientRect();
-    let ratio = (event.clientX - rect.left) / rect.width; 
+    let ratio = (event.clientX - rect.left) / rect.width;
 
     if (ratio < 0) ratio = 0;
     if (ratio > 1) ratio = 1;
 
-    let raw = (index - 1) + ratio;  
+    let raw = (index - 1) + ratio;
 
-    let snapped = Math.round(raw * 2) / 2; 
+    let snapped = Math.round(raw * 2) / 2;
 
     if (snapped < 0.5) snapped = 0.5;
     if (snapped > 5) snapped = 5;
@@ -105,12 +137,12 @@ export class StarRatingComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
 
-    const normalized = this.valueFromStar(event, index); 
+    const normalized = this.valueFromStar(event, index);
     if (normalized < 0.5 || normalized > 5) return;
 
     this.loading = true;
     this.errorMsg = null;
-    this.userValue = normalized;   
+    this.userValue = normalized;
 
     this.api
       .valorarContenido(this.contentId, normalized, this.userEmail)

@@ -1,10 +1,12 @@
 <div class="ro-banner" *ngIf="readOnly">
-  <span>📖 Modo lectura activado — no puedes interactuar con esta página.</span>
-  <button
-    class="btn-cerrar"
-    *ngIf="fromAdmin"
-    type="button"
-    (click)="salirModoLectura()"
+  <span>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
+      style="vertical-align: text-bottom; margin-right: 4px;">
+      <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z" />
+    </svg>
+    Modo lectura activado — no puedes interactuar con esta página.
+  </span>
+  <button class="btn-cerrar" *ngIf="fromAdmin" type="button" (click)="salirModoLectura()"
     aria-label="Salir del modo lectura">
     Salir del modo lectura
   </button>
@@ -27,13 +29,12 @@
           <div class="user-meta">
             <div class="user-meta-main">
               <div class="user-name">{{ userName }}</div>
-              <button
-                class="edit-inline"
-                type="button"
-                (click)="toggleEditar()"
-                title="Editar perfil"
+              <button class="edit-inline" type="button" (click)="toggleEditar()" title="Editar perfil"
                 [disabled]="readOnly">
-                ✏️
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                </svg>
               </button>
               <span class="user-chip-vip" *ngIf="model?.vip">VIP</span>
             </div>
@@ -50,38 +51,41 @@
         <div class="catalog-mode" *ngIf="isUsuario">
           <span class="catalog-mode-label">Vista</span>
           <div class="catalog-mode-pills">
-            <button
-              type="button"
-              class="catalog-mode-pill"
-              [class.active]="filterMode === 'todos'"
+            <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'todos'"
               (click)="filterMode = 'todos'; onFilterChange()">
-              📚 Todos
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                style="vertical-align: text-bottom; margin-right: 4px;">
+                <path
+                  d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
+              </svg>
+              Todos
             </button>
-            <button
-              type="button"
-              class="catalog-mode-pill"
-              [class.active]="filterMode === 'favoritos'"
+            <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'favoritos'"
               (click)="filterMode = 'favoritos'; onFilterChange()">
-              ❤️ Favoritos
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                style="vertical-align: text-bottom; margin-right: 4px;">
+                <path
+                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              Favoritos
             </button>
-            <button
-              type="button"
-              class="catalog-mode-pill"
-              [class.active]="filterMode === 'historial'"
+            <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'historial'"
               (click)="filterMode = 'historial'; onFilterChange()">
-              🕓 Historial
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                style="vertical-align: text-bottom; margin-right: 4px;">
+                <path
+                  d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+              </svg>
+              Historial
             </button>
           </div>
 
-          <!-- Select real para accesibilidad / teclado -->
           <label for="catalogFilter" class="sr-only">Filtro de catálogo</label>
-          <select id="catalogFilter"
-                  class="catalog-mode-select sr-only"
-                  [(ngModel)]="filterMode"
-                  (change)="onFilterChange()">
-            <option value="todos">📚 Todos</option>
-            <option value="favoritos">❤️ Mis favoritos</option>
-            <option value="historial">🕓 Historial</option>
+          <select id="catalogFilter" class="catalog-mode-select sr-only" [(ngModel)]="filterMode"
+            (change)="onFilterChange()">
+            <option value="todos">Todos</option>
+            <option value="favoritos">Mis favoritos</option>
+            <option value="historial">Historial</option>
           </select>
         </div>
 
@@ -94,48 +98,81 @@
       <div class="user-layout">
 
         <aside class="user-filters">
-          <div class="user-filters-card">
+          <div class="user-filters-card" [class.filters-open]="showFilters">
             <div class="user-filters-header">
-              <h3 class="user-filters-title">🔎 Filtros</h3>
-              <span class="user-filters-badge">
-                {{ filteredCon.length || 0 }} resultado(s)
-              </span>
+              <h3 class="user-filters-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"
+                  style="vertical-align: text-bottom; margin-right: 6px;">
+                  <path
+                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                </svg>
+                Filtros
+              </h3>
+              <div class="header-actions">
+                <span class="user-filters-badge">
+                  {{ filteredCon.length || 0 }} resultado(s)
+                </span>
+                <button class="close-filters-btn" (click)="closeFilters()" type="button" aria-label="Cerrar filtros">
+                  ✕ Cerrar
+                </button>
+              </div>
             </div>
 
             <form (submit)="$event.preventDefault()">
               <div class="filter-section">
-                <label for="q">🔤 Búsqueda (Título)</label>
-                <input id="q" type="text" name="q"
-                       [(ngModel)]="filtrosContenido.q"
-                       (ngModelChange)="onFiltrosChange()"
-                       placeholder="Buscar..." />
+                <label for="q">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M9.5 3c-1.74 0-3.41.81-4.5 2.09C3.91 3.81 2.24 3 0.5 3v2c1.74 0 3.41.81 4.5 2.09C6.09 5.81 7.76 5 9.5 5c1.74 0 3.41.81 4.5 2.09C15.09 5.81 16.76 5 18.5 5v-2c-1.74 0-3.41.81-4.5 2.09C12.91 3.81 11.24 3 9.5 3z" />
+                  </svg>
+                  Búsqueda (Título)
+                </label>
+                <input id="q" type="text" name="q" [(ngModel)]="filtrosContenido.q" (ngModelChange)="onFiltrosChange()"
+                  placeholder="Buscar..." />
               </div>
 
               <div class="filter-section">
-                <label for="tipo">🎞️ Tipo</label>
-                <select id="tipo" name="tipo"
-                        [(ngModel)]="filtrosContenido.tipo"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="tipo">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z" />
+                  </svg>
+                  Tipo
+                </label>
+                <select id="tipo" name="tipo" [(ngModel)]="filtrosContenido.tipo" (ngModelChange)="onFiltrosChange()">
                   <option value="">Todos</option>
                   <option *ngFor="let t of tiposDisponibles" [value]="t">{{ t }}</option>
                 </select>
               </div>
 
               <div class="filter-section">
-                <label for="categoria">🏷️ Categoría</label>
-                <select id="categoria" name="categoria"
-                        [(ngModel)]="filtrosContenido.categoria"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="categoria">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z" />
+                  </svg>
+                  Categoría
+                </label>
+                <select id="categoria" name="categoria" [(ngModel)]="filtrosContenido.categoria"
+                  (ngModelChange)="onFiltrosChange()">
                   <option value="">Todas</option>
                   <option *ngFor="let c of categoriasDisponibles" [value]="c">{{ c }}</option>
                 </select>
               </div>
 
               <div class="filter-section" *ngIf="canSeeVip()">
-                <label for="role">🛡️ Rol de acceso</label>
-                <select id="role" name="role"
-                        [(ngModel)]="filtrosContenido.role"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="role">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+                  </svg>
+                  Rol de acceso
+                </label>
+                <select id="role" name="role" [(ngModel)]="filtrosContenido.role" (ngModelChange)="onFiltrosChange()">
                   <option value="">Cualquiera</option>
                   <option value="VIP">VIP</option>
                   <option value="STANDARD">Estándar</option>
@@ -143,37 +180,52 @@
               </div>
 
               <div class="filter-section">
-                <label>👶 Clasificación por edad</label>
+                <label>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                  </svg>
+                  Clasificación por edad
+                </label>
                 <div class="age-row">
-                  <select name="ageMode"
-                          [(ngModel)]="filtrosContenido.ageMode"
-                          (ngModelChange)="onFiltrosChange()">
+                  <select name="ageMode" [(ngModel)]="filtrosContenido.ageMode" (ngModelChange)="onFiltrosChange()">
                     <option value="">Sin filtro</option>
                     <option value="mayores">Mayores de… (+X)</option>
                     <option value="menores">Menores de… (≤X)</option>
                   </select>
-                  <input type="number" min="0" name="ageValue"
-                         [(ngModel)]="filtrosContenido.ageValue"
-                         (ngModelChange)="onFiltrosChange()" placeholder="X" />
+                  <input type="number" min="0" name="ageValue" [(ngModel)]="filtrosContenido.ageValue"
+                    (ngModelChange)="onFiltrosChange()" placeholder="X" />
                 </div>
               </div>
 
               <div class="filter-section">
-                <label for="resol">🖥️ Resolución</label>
-                <select id="resol" name="resolucion"
-                        [(ngModel)]="filtrosContenido.resolucion"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="resol">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z" />
+                  </svg>
+                  Resolución
+                </label>
+                <select id="resol" name="resolucion" [(ngModel)]="filtrosContenido.resolucion"
+                  (ngModelChange)="onFiltrosChange()">
                   <option value="">Todas</option>
                   <option *ngFor="let r of resolucionesDisponibles" [value]="r">{{ r }}</option>
                 </select>
               </div>
 
               <div class="filter-section">
-                <label for="listaPublica">📂 Lista</label>
-                <select id="listaPublica"
-                        name="listaPublica"
-                        [(ngModel)]="filtrosContenido.listaId"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="listaPublica">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path
+                      d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                  </svg>
+                  Lista
+                </label>
+                <select id="listaPublica" name="listaPublica" [(ngModel)]="filtrosContenido.listaId"
+                  (ngModelChange)="onFiltrosChange()">
                   <option value="">Todas</option>
                   <option *ngFor="let l of listasPublicas" [value]="l.id">
                     {{ l.nombre }} <span *ngIf="!l.publica"> (privada)</span>
@@ -185,10 +237,15 @@
               </div>
 
               <div class="filter-section">
-                <label for="orden">↕️ Ordenar</label>
-                <select id="orden" name="ordenar"
-                        [(ngModel)]="filtrosContenido.ordenar"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="orden">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" />
+                  </svg>
+                  Ordenar
+                </label>
+                <select id="orden" name="ordenar" [(ngModel)]="filtrosContenido.ordenar"
+                  (ngModelChange)="onFiltrosChange()">
                   <option value="fecha">Fecha</option>
                   <option value="titulo">Título</option>
                   <option value="reproducciones">Reproducciones</option>
@@ -196,13 +253,50 @@
               </div>
 
               <div class="filter-section">
-                <label for="dir">⬆⬇ Dirección</label>
-                <select id="dir" name="dir"
-                        [(ngModel)]="filtrosContenido.dir"
-                        (ngModelChange)="onFiltrosChange()">
+                <label for="dir">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                    style="vertical-align: text-bottom; margin-right: 4px;">
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                  Dirección
+                </label>
+                <select id="dir" name="dir" [(ngModel)]="filtrosContenido.dir" (ngModelChange)="onFiltrosChange()">
                   <option value="desc">Descendente</option>
                   <option value="asc">Ascendente</option>
                 </select>
+              </div>
+
+              <div class="filter-section mobile-only">
+                <label>Vista</label>
+                <div class="catalog-mode-pills">
+                  <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'todos'"
+                    (click)="filterMode = 'todos'; onFilterChange()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                      style="vertical-align: text-bottom; margin-right: 4px;">
+                      <path
+                        d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
+                    </svg>
+                    Todos
+                  </button>
+                  <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'favoritos'"
+                    (click)="filterMode = 'favoritos'; onFilterChange()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                      style="vertical-align: text-bottom; margin-right: 4px;">
+                      <path
+                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                    Favoritos
+                  </button>
+                  <button type="button" class="catalog-mode-pill" [class.active]="filterMode === 'historial'"
+                    (click)="filterMode = 'historial'; onFilterChange()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                      style="vertical-align: text-bottom; margin-right: 4px;">
+                      <path
+                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                    </svg>
+                    Historial
+                  </button>
+                </div>
               </div>
 
               <button type="button" class="btn--ghost btn-reset" (click)="resetFiltros()">Limpiar filtros</button>
@@ -227,20 +321,20 @@
             <span>No hay contenidos disponibles.</span>
           </div>
 
-          <div class="catalog-wrap"
-               *ngIf="!contenidosLoading && !contenidosError && filteredCon.length > 0">
+          <div class="catalog-wrap" *ngIf="!contenidosLoading && !contenidosError && filteredCon.length > 0">
             <div class="catalog-frame" #frame>
               <div class="catalog-frame__head">
                 <div class="catalog-frame__head-left">
                   <div class="catalog-frame__title-row">
                     <h2 class="catalog-frame__title">Catálogo</h2>
 
-                    <button type="button"
-                            *ngIf="isUsuario"
-                            class="catalog-addlist-btn"
-                            (click)="openCrearListaModal()"
-                            [disabled]="readOnly">
-                      <span class="icon">➕</span>
+                    <button type="button" *ngIf="isUsuario" class="catalog-addlist-btn" (click)="openCrearListaModal()"
+                      [disabled]="readOnly">
+                      <span class="icon">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                      </span>
                       <span>Lista privada</span>
                     </button>
                   </div>
@@ -251,16 +345,37 @@
                 </div>
 
                 <div class="catalog-chip-view" *ngIf="isUsuario">
-                  <span *ngIf="filterMode === 'todos'">📚 Todos</span>
-                  <span *ngIf="filterMode === 'favoritos'">❤️ Tus favoritos</span>
-                  <span *ngIf="filterMode === 'historial'">🕓 Historial visto</span>
+                  <span *ngIf="filterMode === 'todos'">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                      style="vertical-align: text-bottom; margin-right: 4px;">
+                      <path
+                        d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
+                    </svg>
+                    Todos
+                  </span>
+                  <span *ngIf="filterMode === 'favoritos'">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                      style="vertical-align: text-bottom; margin-right: 4px;">
+                      <path
+                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                    Tus favoritos
+                  </span>
+                  <span *ngIf="filterMode === 'historial'">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+                      style="vertical-align: text-bottom; margin-right: 4px;">
+                      <path
+                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                    </svg>
+                    Historial visto
+                  </span>
                 </div>
               </div>
 
-
               <div class="grid">
-                <article *ngFor="let c of pagedCon" class="card" [class.is-open]="isDetailsOpen(c)">
-                  <div class="thumb"  [class.launching]="launchingId===c.id" (click)="openDetails(c)" (keydown)="handleKeyDown($event)">
+                <article *ngFor="let c of pagedCon" class="card" [class.is-open]="selectedContent?.id === c.id">
+                  <div class="thumb" [class.launching]="launchingId===c.id" (click)="openDetails(c)"
+                    (keydown)="handleKeyDown($event)">
                     <ng-container *ngIf="c.imagen && c.imagen.trim(); else noimg">
                       <img [src]="c.imagen!" [alt]="c.titulo" loading="lazy" />
                     </ng-container>
@@ -276,155 +391,42 @@
 
                     <div class="title-bar">
                       <h3 class="card-title" [title]="c.titulo">{{ c.titulo }}</h3>
-                        <app-star-rating
-                          class="rating-only"
-                          [contentId]="c.id"
-                          [userEmail]="userEmail"
-                          [enabled]="false"
-                          [autoReproducir]="false">
-                        </app-star-rating>
+                      <app-star-rating class="rating-only" [contentId]="c.id" [userEmail]="userEmail" [enabled]="false"
+                        [autoReproducir]="false">
+                      </app-star-rating>
                     </div>
 
                     <div class="thumb-actions">
-                      <button type="button" class="play-btn" title="Reproducir" (click)="play(c); $event.stopPropagation()">▶</button>
-                      <button *ngIf="!readOnly" type="button" class="rate-btn" title="Valorar" (click)="toggleRating(c); $event.stopPropagation()">★</button>
+                      <button type="button" class="play-btn" title="Reproducir"
+                        (click)="play(c); $event.stopPropagation()">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </button>
+                      <button *ngIf="!readOnly" type="button" class="rate-btn" title="Valorar"
+                        (click)="toggleRating(c); $event.stopPropagation()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                          <path
+                            d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-
-                  <div class="screen-dim" (click)="closeDetails(c)" (keydown)="handleKeyDown($event)" aria-hidden="true"></div>
-
-                  <div class="pop-card" aria-modal="true" (click)="$event.stopPropagation()" (keydown)="handleKeyDown($event)">
-                    <button type="button" class="pop-card__close" aria-label="Cerrar" (click)="closeDetails(c)">✕</button>
-
-                    <div class="pop-card__media">
-                      <ng-container *ngIf="c.imagen && c.imagen.trim(); else noimgPop">
-                        <img [src]="c.imagen!" [alt]="c.titulo" loading="lazy" />
-                      </ng-container>
-                      <ng-template #noimgPop>
-                        <div class="noimg" aria-hidden="true">Sin imagen</div>
-                      </ng-template>
-
-                      <div class="pop-card__badges">
-                        <span class="badge info">{{ c.tipo }}</span>
-                        <span *ngIf="c.vip" class="badge vip">VIP</span>
-                        <span *ngIf="(c.restringidoEdad ?? 0) > 0" class="badge age">+{{ c.restringidoEdad }}</span>
-                      </div>
-                    </div>
-
-                    <div class="pop-card__body">
-                      <div class="pop-card__head">
-                        <h3 class="pop-card__title" [title]="c.titulo">{{ c.titulo }}</h3>
-                        <div class="pop-card__rating">
-                          <app-star-rating
-                            [contentId]="c.id"
-                            [userEmail]="userEmail"
-                            [enabled]="false"
-                            [autoReproducir]="false">
-                          </app-star-rating>
-                        </div>
-                      </div>
-
-                      <p class="pop-card__desc" *ngIf="c.descripcion">{{ c.descripcion }}</p>
-
-                      <div class="pop-card__meta">
-                        <span>{{ c.resolucion || '—' }}</span>
-                        <span>·</span>
-                        <span>{{ c.duracionMinutos || '—' }} min</span>
-                        <span *ngIf="c.reproducciones !== undefined" class="plays" title="Reproducciones">· ▶ {{ c.reproducciones }}</span>
-                      </div>
-
-                      <div class="pop-card__actions">
-                        <button type="button"
-                                class="play-btn play-btn--lg"
-                                title="Reproducir"
-                                (click)="play(c); $event.stopPropagation()">
-                          ▶
-                        </button>
-
-                        <button type="button"
-                                *ngIf="isUsuario"
-                                class="fav-btn fav-btn--lg"
-                                [class.is-fav]="isFav(c.id)"
-                                [attr.aria-pressed]="isFav(c.id)"
-                                [disabled]="pendingToggle[c.id]"
-                                (click)="onToggleFav(c.id); $event.stopPropagation()"
-                                [title]="isFav(c.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
-                          <svg viewBox="0 0 24 24" class="heart" aria-hidden="true">
-                            <path d="M12 21s-6.3-4.35-9.1-7.13A5.91 5.91 0 0 1 12 4a5.91 5.91 0 0 1 9.1 9.87C18.3 16.65 12 21 12 21z"/>
-                          </svg>
-                          <span class="sr-only">
-                            {{ isFav(c.id) ? 'Quitar de favoritos' : 'Añadir a favoritos' }}
-                          </span>
-                        </button>
-
-                        <button *ngIf="!readOnly"
-                                type="button"
-                                class="rate-btn rate-btn--lg"
-                                title="Valorar"
-                                (click)="toggleRating(c); $event.stopPropagation()">
-                          ★
-                        </button>
-                      </div>
-
-                      <div class="lista-add"
-                          *ngIf="isUsuario && misListas && misListas.length > 0">
-                        <div class="lista-add__header">
-                          <span class="lista-add__label">Añadir a mis listas</span>
-                          <span class="lista-add__badge">🔒 Solo tú</span>
-                        </div>
-
-                        <div class="lista-add__controls">
-                          <select
-                            class="lista-add__select"
-                            [id]="'lista-select-' + c.id"
-                            [(ngModel)]="selectedListaPorContenido[c.id]"
-                            [disabled]="readOnly || creandoListaContenido[c.id]">
-                            <option [ngValue]="''">Selecciona una lista…</option>
-                            <option *ngFor="let l of misListas" [ngValue]="l.id">
-                              {{ l.nombre }} <span *ngIf="!l.publica"> (privada)</span>
-                            </option>
-                          </select>
-
-                          <button
-                            type="button"
-                            class="lista-add__btn"
-                            (click)="anadirContenidoALista(c)"
-                            [disabled]="readOnly || !selectedListaPorContenido[c.id] || creandoListaContenido[c.id]">
-                            {{ creandoListaContenido[c.id] ? 'Añadiendo…' : 'Añadir' }}
-                          </button>
-                        </div>
-
-                        <small class="lista-add__msg ok" *ngIf="msgListaOk[c.id]">
-                          {{ msgListaOk[c.id] }}
-                        </small>
-                        <small class="lista-add__msg err" *ngIf="msgListaError[c.id]">
-                          {{ msgListaError[c.id] }}
-                        </small>
-                      </div>
-
-                      <div class="rate-panel" *ngIf="isRatingOpen(c)">
-                        <app-star-rating
-                          [contentId]="c.id"
-                          [userEmail]="userEmail"
-                          [enabled]="true"
-                          [autoReproducir]="false"
-                          (rated)="onRated(c.id, $event)">
-                        </app-star-rating>
-                        <div class="rate-actions">
-                          <button type="button" class="btn--ghost" (click)="closeRating(c)">Cancelar</button>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
                 </article>
               </div>
 
               <div class="pager">
-                <button (click)="prevPage()" [disabled]="page <= 1">«</button>
+                <button (click)="prevPage()" [disabled]="page <= 1" aria-label="Página anterior">
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                  </svg>
+                </button>
                 <span class="page-info">Página {{ page }} / {{ totalPages }}</span>
-                <button (click)="nextPage()" [disabled]="page >= totalPages">»</button>
+                <button (click)="nextPage()" [disabled]="page >= totalPages" aria-label="Página siguiente">
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                  </svg>
+                </button>
               </div>
 
             </div>
@@ -437,254 +439,42 @@
 
   </div>
 
-  <button class="overlay" *ngIf="editOpen" (click)="cancelarEditar()"></button>
-  <div class="edit-panel modal" [class.open]="editOpen" (click)="$event.stopPropagation()" (keydown)="handleKeyDown($event)">
-    <h3>Editar perfil</h3>
+  <app-edit-profile-modal *ngIf="editOpen" [userEmail]="userEmail" [model]="model" [readOnly]="readOnly"
+    [aliasError]="aliasError" [aliasChecking]="aliasChecking" [aliasTaken]="aliasTaken" [saving]="saving"
+    [okMsg]="okMsg" [errorMsg]="errorMsg" [selectedAvatar]="selectedAvatar" (close)="cancelarEditar()"
+    (save)="guardarCambios()" (darDeBaja)="DarDeBaja()" (openAvatarModal)="openAvatarModal()"
+    (aliasChange)="onAliasChange($event)" (vipChange)="onVipChanged($event)">
+  </app-edit-profile-modal>
 
-    <form (ngSubmit)="guardarCambios()">
-      <div class="row">
-        <label class="label-lock" for="email_ro">
-          Email <span class="lock" title="Campo bloqueado">🔒</span>
-          <span class="badge-ro">bloqueado</span>
-        </label>
-        <input id="email_ro" type="text" [ngModel]="userEmail" name="email_ro" class="ro" readonly />
-      </div>
+  <app-avatar-selector-modal *ngIf="showAvatarModal" [avatars]="avatars" [selectedAvatar]="selectedAvatar"
+    (close)="closeAvatarModal()" (select)="selectAvatar($event)">
+  </app-avatar-selector-modal>
 
-      <div class="row">
-        <label class="label-lock" for="fechaNac_ro">
-          Fecha de nacimiento <span class="lock" title="Campo bloqueado">🔒</span>
-          <span class="badge-ro">bloqueado</span>
-        </label>
-        <input type="date" [ngModel]="model.fechaNac" name="fechaNac_ro" class="ro" readonly />
-      </div>
+  <app-media-player-modal *ngIf="playerOpen" [playingTitle]="playingTitle" [playerKind]="playerKind"
+    [playerSrc]="playerSrc" [embedUrl]="embedUrl" (close)="closePlayer()">
+  </app-media-player-modal>
 
-      <div class="row">
-        <label for="nombre">Nombre</label>
-        <input id="nombre" type="text" [(ngModel)]="model.nombre" name="nombre" />
-      </div>
+  <app-create-list-modal *ngIf="showCrearListaModal" [nombre]="nuevaListaNombre" [descripcion]="nuevaListaDescripcion"
+    [creating]="creatingList" [okMsg]="crearListaOk" [errorMsg]="crearListaError" (close)="closeCrearListaModal()"
+    (create)="crearLista()" (nombreChange)="nuevaListaNombre = $event"
+    (descripcionChange)="nuevaListaDescripcion = $event">
+  </app-create-list-modal>
 
-      <div class="row">
-        <label for="apellidos">Apellidos</label>
-        <input id="apellidos" type="text" [(ngModel)]="model.apellidos" name="apellidos" />
-      </div>
+  <app-content-details-modal *ngIf="isDetailsModalOpen && selectedContent" [content]="selectedContent"
+    [userEmail]="userEmail" [isUsuario]="isUsuario" [readOnly]="readOnly" [misListas]="misListas"
+    [isFav]="selectedContent ? isFav(selectedContent.id) : false"
+    [pendingToggle]="selectedContent ? pendingToggle[selectedContent.id] : false"
+    [creatingList]="selectedContent ? creandoListaContenido[selectedContent.id] : false"
+    [msgListaOk]="selectedContent ? msgListaOk[selectedContent.id] : null"
+    [msgListaError]="selectedContent ? msgListaError[selectedContent.id] : null" (close)="closeDetails()"
+    (play)="selectedContent && play(selectedContent)" (toggleFav)="selectedContent && onToggleFav(selectedContent.id)"
+    (toggleRating)="selectedContent && toggleRating(selectedContent)"
+    (rate)="selectedContent && onRated(selectedContent.id, $event)"
+    (addToList)="selectedContent && anadirContenidoALista(selectedContent, $event)">
+  </app-content-details-modal>
 
-      <div class="row">
-        <label for="alias">Alias</label>
-        <input
-          id="alias"
-          type="text"
-          name="alias"
-          [(ngModel)]="model.alias"
-          (ngModelChange)="onAliasChange($event)"
-        />
-
-        <small class="err" *ngIf="aliasError">{{ aliasError }}</small>
-        <small class="hint" *ngIf="aliasChecking && !aliasError">Comprobando alias…</small>
-      </div>
-
-
-      <div class="row">
-        <label>VIP
-          <input type="checkbox" [(ngModel)]="model.vip" name="vip" (ngModelChange)="onVipChanged($event)" />
-        </label>
-      </div>
-
-      <div class="Avatar">
-        <label for="elegirAvatar">Avatar</label>
-        <button id="elegirAvatar" type="button" class="btn" (click)="openAvatarModal()">Elegir Avatar</button>
-        <div *ngIf="selectedAvatar" class="selected-avatar-card">
-          <img [src]="selectedAvatar" alt="avatar" class="selected-avatar-card__img">
-          <div class="selected-avatar-card__text">
-            <b>Avatar seleccionado</b>
-            <small>Puedes cambiarlo cuando quieras</small>
-          </div>
-        </div>
-      </div>
-
-      <p class="ok" *ngIf="okMsg">{{ okMsg }}</p>
-      <p class="err" *ngIf="errorMsg">{{ errorMsg }}</p>
-
-      <div class="actions">
-        <button class="btn-darseBaja" type="button" (click)="DarDeBaja()">Eliminar Cuenta</button>
-        <button type="button" class="btn-out" (click)="cancelarEditar()">Cancelar</button>
-        <button
-          type="submit"
-          class="btn-primario"
-          [disabled]="saving || aliasChecking || aliasTaken || !!aliasError">
-          {{ saving ? 'Guardando…' : 'Guardar' }}
-        </button>
-
-      </div>
-    </form>
-  </div>
-
-  <div
-    *ngIf="showAvatarModal"
-    class="avatar-modal"
-    (click)="closeAvatarModal()"
-    (keydown.enter)="closeAvatarModal()"
-    (keydown.space)="closeAvatarModal()"
-    (keydown.escape)="closeAvatarModal()">
-
-    <dialog
-      class="avatar-modal-content"
-      open
-      aria-labelledby="avatarTitle"
-      aria-modal="true"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-
-      <h2 id="avatarTitle" class="avatar-modal-title">Seleccionar avatar</h2>
-
-      <div class="avatar-preview" *ngIf="selectedAvatar; else noPreview">
-        <img [src]="selectedAvatar" alt="avatar seleccionado">
-        <div class="avatar-preview__caption">Seleccionado</div>
-      </div>
-      <ng-template #noPreview>
-        <div class="avatar-preview avatar-preview--placeholder">
-          <span>Selecciona uno de la galería</span>
-        </div>
-      </ng-template>
-
-      <ul class="avatar-grid">
-        <li *ngFor="let avatar of avatars" class="avatar-option" [class.selected]="selectedAvatar === avatar">
-          <button type="button"
-                  (click)="selectAvatar(avatar)"
-                  (keydown.enter)="selectAvatar(avatar)"
-                  [attr.aria-pressed]="selectedAvatar === avatar"
-                  [attr.aria-label]="'Elegir avatar ' + avatar">
-            <img [src]="avatar" alt="avatar">
-            <span class="avatar-check">✓</span>
-          </button>
-        </li>
-      </ul>
-
-      <div class="avatar-modal-actions">
-        <button class="btn--ghost" type="button" (click)="closeAvatarModal()">Cancelar</button>
-      </div>
-    </dialog>
-  </div>
-
-  <div *ngIf="playerOpen">
-    <button
-      type="button"
-      class="player-overlay"
-      (click)="closePlayer()"
-      aria-label="Cerrar reproductor">
-    </button>
-
-    <div class="player-modal" (click)="$event.stopPropagation()" (keydown)="handleKeyDown($event)">
-      <div class="player-header">
-        <h3 class="player-title">{{ playingTitle }}</h3>
-        <button class="player-close" (click)="closePlayer()" aria-label="Cerrar">✕</button>
-      </div>
-
-      <div class="player-body">
-        <ng-container [ngSwitch]="playerKind">
-          <video
-            *ngSwitchCase="'VIDEO'"
-            #videoEl
-            [src]="playerSrc || undefined"
-            controls
-            autoplay
-            class="player-video">
-            <track src="subtitles.vtt" kind="subtitles" srclang="en" label="English">
-            <track src="descriptions.vtt" kind="descriptions" srclang="en" label="English Descriptions">
-          </video>
-
-          <audio
-            *ngSwitchCase="'AUDIO'"
-            #audioEl
-            [src]="playerSrc || undefined"
-            controls
-            autoplay
-            class="player-audio">
-          </audio>
-
-          <iframe
-            *ngSwitchCase="'EMBED'"
-            [src]="embedUrl || null"
-            title="Reproductor externo"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowfullscreen
-            class="player-iframe">
-          </iframe>
-        </ng-container>
-      </div>
-
-      <div class="player-footer">
-        <button type="button" class="btn-out" (click)="closePlayer()">Cerrar</button>
-      </div>
-    </div>
-  </div>
-<button class="overlay"
-        *ngIf="showCrearListaModal"
-        (click)="closeCrearListaModal()">
-</button>
-
-<div class="edit-panel modal lista-modal"
-     [class.open]="showCrearListaModal"
-     (click)="$event.stopPropagation()"
-     (keydown)="handleKeyDown($event)">
-
-  <div class="lista-modal__header">
-    <div class="lista-modal__icon">📂</div>
-    <div class="lista-modal__titles">
-      <h3>Crear lista privada</h3>
-      <p class="lista-modal__subtitle">
-        Organiza tus contenidos en una lista visible solo para ti.
-      </p>
-    </div>
-    <button
-      type="button"
-      class="lista-modal__close"
-      (click)="closeCrearListaModal()"
-      aria-label="Cerrar">
-      ✕
-    </button>
-  </div>
-
-  <form (ngSubmit)="crearLista()">
-    <div class="row">
-      <label for="nuevaListaNombre">Nombre de la lista</label>
-      <input id="nuevaListaNombre"
-             type="text"
-             name="nuevaListaNombre"
-             [(ngModel)]="nuevaListaNombre"
-             required
-             placeholder="Ej. Pelis para el finde" />
-    </div>
-
-    <div class="row">
-      <label for="nuevaListaDescripcion">Descripción (opcional)</label>
-      <textarea id="nuevaListaDescripcion"
-                name="nuevaListaDescripcion"
-                rows="3"
-                [(ngModel)]="nuevaListaDescripcion"
-                placeholder="Añade una nota rápida sobre esta lista"></textarea>
-    </div>
-
-    <div class="lista-modal__pill-row">
-      <span class="lista-modal__pill">🔒 Modo privado</span>
-      <small class="lista-modal__hint">
-        Solo tú podrás ver y gestionar esta lista.
-      </small>
-    </div>
-
-    <p class="ok" *ngIf="crearListaOk">{{ crearListaOk }}</p>
-    <p class="err" *ngIf="crearListaError">{{ crearListaError }}</p>
-
-    <div class="actions">
-      <button type="button" class="btn-out" (click)="closeCrearListaModal()">Cancelar</button>
-      <button type="submit"
-              class="btn-primario"
-              [disabled]="creatingList || !nuevaListaNombre.trim()">
-        {{ creatingList ? 'Creando…' : 'Guardar lista privada' }}
-      </button>
-    </div>
-  </form>
-</div>
-
-
+  <app-mobile-navbar [filtersActive]="showFilters" (toggleFilters)="toggleFilters()" (openProfile)="toggleEditar()"
+    (logout)="CerrarSesion()" (home)="cargarContenidos()">
+  </app-mobile-navbar>
 
 </div>
