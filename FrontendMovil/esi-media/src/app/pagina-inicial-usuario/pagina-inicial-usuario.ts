@@ -19,6 +19,8 @@ import { MediaPlayerModalComponent } from '../modals/media-player-modal/media-pl
 import { CreateListModalComponent } from '../modals/create-list-modal/create-list-modal.component';
 import { MobileNavbarComponent } from '../mobile-navbar/mobile-navbar.component';
 import { ListasPublicasService, ListaPublica } from '../listas-publicas.service';
+import { AlertsModalComponent } from '../modals/alerts-modal/alerts-modal.component';
+import { AlertasService, UserAlert } from '../alertas.service';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -82,7 +84,8 @@ function isDirectMedia(url: string): boolean {
     AvatarSelectorModalComponent,
     MediaPlayerModalComponent,
     CreateListModalComponent,
-    MobileNavbarComponent
+    MobileNavbarComponent,
+    AlertsModalComponent
   ],
   templateUrl: './pagina-inicial-usuario.html',
   styleUrls: ['./pagina-inicial-usuario.css'],
@@ -113,6 +116,13 @@ export class PaginaInicialUsuario implements OnInit {
     this.showFilters = false;
     this.cdr.markForCheck();
   }
+
+  // Alertas
+  alertas: UserAlert[] = [];
+  alertasLoading = false;
+  alertasError: string | null = null;
+  showAlertas = false;
+  get alertCount(): number { return this.alertas?.length || 0; }
 
   pageSize = 12;
   page = 1;
@@ -254,7 +264,8 @@ export class PaginaInicialUsuario implements OnInit {
     private readonly s: DomSanitizer,
     private contenidosSvc: ContenidosService,
     private favs: FavoritesService,
-    private listasService: ListasPublicasService
+    private listasService: ListasPublicasService,
+    private alertasSvc: AlertasService
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
@@ -362,6 +373,47 @@ export class PaginaInicialUsuario implements OnInit {
   onAliasChange(alias: string) {
     if (!this.model) this.model = {};
     this.model.alias = alias;
+  }
+
+  // Métodos de alertas
+  cargarAlertas(): void {
+    if (!this.userEmail) return;
+    this.alertasLoading = true;
+    this.alertasError = null;
+    this.alertasSvc.listar(this.userEmail).subscribe({
+      next: (arr) => {
+        this.alertas = arr || [];
+        this.alertasLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        this.alertasLoading = false;
+        this.alertasError = e?.error?.message || e?.message || 'No se pudieron cargar las alertas';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  toggleAlertasPanel(): void {
+    this.showAlertas = !this.showAlertas;
+    if (this.showAlertas) {
+      this.cargarAlertas();
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeAlertasPanel(): void {
+    this.showAlertas = false;
+    this.cdr.markForCheck();
+  }
+
+  onAlertDeleted(alertId: string): void {
+    this.alertas = this.alertas.filter(a => a.id !== alertId);
+    this.cdr.markForCheck();
+  }
+
+  onReloadAlertas(): void {
+    this.cargarAlertas();
   }
 
 
