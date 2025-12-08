@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export type AlertType = 'NEW_CONTENT' | 'CONTENT_EXPIRING';
+export type AlertType = 'NEW_CONTENT' | 'CONTENT_EXPIRING' | 'CONTENT_MATCHES_INTERESTS';
 
 export interface UserAlert {
   id: string;

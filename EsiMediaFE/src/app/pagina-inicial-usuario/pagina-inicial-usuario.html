@@ -78,7 +78,7 @@
                       class="btn-buzon"
                       (click)="toggleAlertasPanel()"
                       [disabled]="alertasLoading">
-                Buzon de alertas ({{ alertCount }})
+                📬 Buzón de alertas ({{ alertCount }})
               </button>
 
               <div *ngIf="showAlertas" class="alert-dropdown">
@@ -101,10 +101,12 @@
                       <span class="alert-pill">
                         {{
                           a.type === 'NEW_CONTENT'
-                            ? 'NUEVO CONTENIDO'
+                            ? '📢 NUEVO CONTENIDO'
                             : a.type === 'CONTENT_EXPIRING'
-                              ? 'CONTENIDO EXPIRA'
-                              : (a.type || 'ALERTA')
+                              ? '⌛ CONTENIDO EXPIRA'
+                              : a.type === 'CONTENT_MATCHES_INTERESTS'
+                                ? '🎯 CONTENIDO BASADO EN TUS GUSTOS'
+                                : (a.type || 'ALERTA')
                         }}
                       </span>
                       <span class="alert-date">
