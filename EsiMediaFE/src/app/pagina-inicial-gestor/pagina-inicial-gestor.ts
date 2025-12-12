@@ -10,6 +10,7 @@ import { AuthService } from '../auth/auth.service';
 import { AppUser, UserDto } from '../auth/models';
 import { Contenidos, Contenido, ModificarContenidoRequest, TipoContenido } from '../contenidos';
 import { ListasPublicasService } from '../listas-publicas.service';
+import { TAGS_AUDIO, TAGS_VIDEO } from '../tags.constants';
 
 type Role = UserDto['role'];
 
@@ -186,10 +187,7 @@ export class PaginaInicialGestor implements OnInit {
     'assets/avatars/avatar4.png', 'assets/avatars/avatar5.png', 'assets/avatars/avatar6.png'
   ];
 
-  availableTags = {
-    video: ['Acción', 'Comedia', 'Drama', 'Suspenso', 'Animación', 'Ciencia Ficción', 'Terror', 'Documental', 'Romance', 'Aventura'],
-    audio: ['Comedia', 'Podcast', 'Humor', 'Música', 'Entrevista', 'Relajación', 'Educativo', 'Narrativa', 'Motivacional', 'Noticias']
-  };
+  availableTags = { video: TAGS_VIDEO, audio: TAGS_AUDIO };
 
   dropdownOpen = false;
 
