@@ -23,7 +23,7 @@ export interface RatingResumen {
 
 @Injectable({ providedIn: 'root' })
 export class ContenidosService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly BASE = `${environment.API_BASE}/Contenidos`;
 
   private buildHeaders(opts: HeaderOpts): Record<string, string> {

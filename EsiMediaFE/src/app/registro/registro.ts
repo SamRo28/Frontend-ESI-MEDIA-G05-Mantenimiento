@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { UsersService } from '../users';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { TAGS_ALL } from '../tags.constants';
 
 type FixedRole = 'ADMINISTRADOR' | 'GESTOR_CONTENIDO';
 type RoleUi = 'usuario' | 'Gestor de Contenido' | 'Administrador';
@@ -18,6 +19,7 @@ const ALIAS_MIN = 3;
 const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 type MfaChoice = 'NONE' | 'EMAIL_OTP' | 'TOTP';
 
+const DEFAULT_GUSTOS = TAGS_ALL;
 
 const trim = (s: string) => (s || '').trim();
 const lower = (s: string) => trim(s).toLowerCase();
@@ -82,6 +84,8 @@ export class Registro implements OnInit, OnDestroy {
   departamento = ''; foto: string | null = null;
   descripcion = ''; especialidad = ''; tipoContenido: AV = '';
   tipoContenidoTouched = false; aliasTouched = false; especialidadTouched = false;
+  gustosDisponibles: string[] = DEFAULT_GUSTOS.slice();
+  misGustosSeleccionados: string[] = [];
 
   showPwd = false; showPwd2 = false; isLoading = false;
   private lastSubmitAt = 0; mensajeError = ''; rolSeleccionado = false;
@@ -102,10 +106,11 @@ export class Registro implements OnInit, OnDestroy {
 
   get esAltaCreador()   { return this.rolFijo === 'GESTOR_CONTENIDO' || this.modoAdminCreador === true; }
   get esAltaAdmin()     { return this.rolFijo === 'ADMINISTRADOR'; }
-  get isGestor()        { return this.esAltaCreador || this.role === 'Gestor de Contenido'; }
+  get isGestor()        { return this.esAltaCreador; }
   get showPasswordFields() { return this.esAltaAdmin ? this.pedirPwdAdmin : true; }
   get hasPwd()          { return trim(this.pwd).length > 0; }
   get roleDisabled()    { return !!this.rolFijo; }
+  get esUsuarioPublico() { return !this.esAltaAdmin && !this.esAltaCreador && this.resolveRole().toLowerCase() === 'usuario'; }
 
   get ageYears(): number | null {
     if (!this.fechaNac) return null;
@@ -209,6 +214,14 @@ export class Registro implements OnInit, OnDestroy {
   openAvatarModal() { this.showAvatarModal = true; }
   closeAvatarModal() { this.showAvatarModal = false; }
   selectAvatar(a: string) { this.selectedAvatar = a; this.foto = a; this.closeAvatarModal(); }
+  isGusto(tag: string): boolean { return this.misGustosSeleccionados.includes(tag); }
+  toggleGusto(tag: string, checked: boolean) {
+    const clean = (tag || '').toString().trim();
+    if (!clean) return;
+    this.misGustosSeleccionados = checked
+      ? Array.from(new Set([...this.misGustosSeleccionados, clean]))
+      : this.misGustosSeleccionados.filter(t => t !== clean);
+  }
 
   onRoleChange(val: string) {
     if (this.rolFijo) return;
@@ -372,6 +385,7 @@ export class Registro implements OnInit, OnDestroy {
     // 👉 Solo usuarios: añadir mfaPreferred
     if (this.resolveRole().toLowerCase() === 'usuario') {
       base.mfaPreferred = this.mfaChoice; // 'NONE' | 'EMAIL_OTP' | 'TOTP'
+      base.misGustos = this.misGustosSeleccionados.join(',');
     }
 
     return base;
@@ -447,3 +461,4 @@ export class Registro implements OnInit, OnDestroy {
     return (this.pwnedCount ?? 0) > 0 ? `⚠️ Aparece en filtraciones <b>${this.pwnedCount}</b> veces. Elige otra.` : '✅ No aparece en filtraciones conocidas.';
   }
 }
+
