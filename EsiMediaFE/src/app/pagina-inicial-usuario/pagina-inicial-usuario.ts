@@ -263,6 +263,16 @@ export class PaginaInicialUsuario implements OnInit {
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
   private readonly DEFAULT_CATEGORIAS = TAGS_ALL;
   private readonly DEFAULT_RESOLUCIONES = ['480p', '720p', '1080p', '4K'];
+  private gustosKey(): string { return `gustos_${this.userEmail || 'anon'}`; }
+  private canonicalizeTags(list: string[]): string[] {
+    const norm = (t: string) => this.normalizeTag(t);
+    return list
+      .map(t => {
+        const target = TAGS_ALL.find(x => norm(x) === norm(t));
+        return target ?? this.t(t);
+      })
+      .filter(Boolean);
+  }
 
   get isUsuario(): boolean {
     const role = (this.loggedUser?.role ?? '').toString().toUpperCase();
@@ -289,6 +299,24 @@ export class PaginaInicialUsuario implements OnInit {
     if (this.filterMode === 'favoritos') this.applyFilter();
     this.cdr.markForCheck();
   }
+  private loadGustosLocal(): string[] {
+    try {
+      const raw = localStorage.getItem(this.gustosKey());
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+  private persistGustosLocal(): void {
+    try { localStorage.setItem(this.gustosKey(), JSON.stringify(this.gustosSeleccionados)); } catch { }
+  }
+  private syncGustosBackendIfMissing(gustosBackend: string[], gustosCache: string[]): void {
+    if (gustosBackend.length === 0 && gustosCache.length > 0 && this.userEmail) {
+      const payload = { email: this.userEmail, misGustos: gustosCache };
+      try { this.auth.putPerfil(payload).subscribe({ next: () => { }, error: () => { } }); } catch { }
+    }
+  }
   private syncGustosDisponibles(): void {
     this.gustosDisponibles = TAGS_ALL.slice();
   }
@@ -314,12 +342,14 @@ export class PaginaInicialUsuario implements OnInit {
     const clean = this.normalizeTag(tag);
     if (!clean) return;
     if (checked) {
-      if (!this.gustosSeleccionados.some(t => this.normalizeTag(t) === clean)) {
-        this.gustosSeleccionados = [...this.gustosSeleccionados, clean];
+      const canon = this.canonicalizeTags([tag])[0];
+      if (canon && !this.gustosSeleccionados.some(t => this.normalizeTag(t) === clean)) {
+        this.gustosSeleccionados = [...this.gustosSeleccionados, canon];
       }
     } else {
       this.gustosSeleccionados = this.gustosSeleccionados.filter(t => this.normalizeTag(t) !== clean);
     }
+    this.persistGustosLocal();
   }
   cargarAlertas(): void {
     if (!this.userEmail) return;
@@ -470,10 +500,15 @@ export class PaginaInicialUsuario implements OnInit {
       : typeof u?.misGustos === 'string'
         ? u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean)
         : [];
-    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip, misGustos: Array.isArray(gustosRaw) ? gustosRaw : [] };
-    this.gustosSeleccionados = gustosRaw
+    const gustosFromBackend = this.canonicalizeTags(Array.isArray(gustosRaw) ? gustosRaw : []);
+    const gustosFromCache = this.canonicalizeTags(this.loadGustosLocal());
+    const gustosFinal = gustosFromBackend.length > 0 ? gustosFromBackend : gustosFromCache;
+    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip, misGustos: gustosFinal };
+    this.gustosSeleccionados = gustosFinal
       .map((g: string) => this.normalizeTag(g))
       .filter(Boolean);
+    this.persistGustosLocal();
+    this.syncGustosBackendIfMissing(gustosFromBackend, gustosFromCache);
   }
   salirModoLectura(): void { localStorage.removeItem('users_readonly_mode'); localStorage.removeItem('users_readonly_from_admin'); this.router.navigateByUrl('/admin'); }
   CerrarSesion(): void {
