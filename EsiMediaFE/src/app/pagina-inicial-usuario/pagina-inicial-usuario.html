@@ -1,4 +1,4 @@
-<div class="ro-banner" *ngIf="readOnly">
+﻿<div class="ro-banner" *ngIf="readOnly">
   <span>📖 Modo lectura activado — no puedes interactuar con esta página.</span>
   <button
     class="btn-cerrar"
@@ -78,7 +78,7 @@
                       class="btn-buzon"
                       (click)="toggleAlertasPanel()"
                       [disabled]="alertasLoading">
-                Buzon de alertas ({{ alertCount }})
+                📬 Buzón de alertas ({{ alertCount }})
               </button>
 
               <div *ngIf="showAlertas" class="alert-dropdown">
@@ -101,10 +101,12 @@
                       <span class="alert-pill">
                         {{
                           a.type === 'NEW_CONTENT'
-                            ? 'NUEVO CONTENIDO'
+                            ? '📢 NUEVO CONTENIDO'
                             : a.type === 'CONTENT_EXPIRING'
-                              ? 'CONTENIDO EXPIRA'
-                              : (a.type || 'ALERTA')
+                              ? '⌛ CONTENIDO EXPIRA'
+                              : a.type === 'CONTENT_MATCHES_INTERESTS'
+                                ? '🎯 CONTENIDO BASADO EN TUS GUSTOS'
+                                : (a.type || 'ALERTA')
                         }}
                       </span>
                       <span class="alert-date">
@@ -549,6 +551,20 @@
         <label>VIP
           <input type="checkbox" [(ngModel)]="model.vip" name="vip" (ngModelChange)="onVipChanged($event)" />
         </label>
+      </div>
+      <div class="row">
+        <label>Mis gustos</label>
+        <div class="chips-select" *ngIf="gustosDisponibles?.length; else noTags">
+          <label class="chip-option" *ngFor="let tag of gustosDisponibles">
+            <input type="checkbox"
+                   [checked]="isGusto(tag)"
+                   (change)="toggleGusto(tag, $event.target.checked)" />
+            <span>{{ tag }}</span>
+          </label>
+        </div>
+        <ng-template #noTags>
+          <small class="hint">No hay tags disponibles.</small>
+        </ng-template>
       </div>
 
       <div class="Avatar">

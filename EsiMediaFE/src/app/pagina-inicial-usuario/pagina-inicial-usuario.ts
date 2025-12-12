@@ -12,6 +12,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { FavoritesService } from '../favorites.service';
 import { AlertasService, UserAlert } from '../alertas.service';
+import { TAGS_ALL, TAGS_AUDIO, TAGS_VIDEO } from '../tags.constants';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -129,9 +130,14 @@ export class PaginaInicialUsuario implements OnInit {
   categoriasDisponibles: string[] = [];
   resolucionesDisponibles: string[] = [];
   edadesDisponibles = [0, 6, 12, 16, 18];
-  onFiltrosChange(): void { this.applyFilter(); this.cdr.markForCheck(); }
+  onFiltrosChange(): void {
+    this.updateCategoriasDisponiblesPorTipo();
+    this.applyFilter();
+    this.cdr.markForCheck();
+  }
   resetFiltros(): void {
     this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
+    this.updateCategoriasDisponiblesPorTipo();
     this.applyFilter();
   }
 
@@ -175,6 +181,8 @@ export class PaginaInicialUsuario implements OnInit {
   userInitials = '';
   userAvatar: string | null = null;
   userVip: boolean = false;
+  gustosDisponibles: string[] = [];
+  gustosSeleccionados: string[] = [];
 
   alertas: UserAlert[] = [];
   alertasLoading = false;
@@ -195,7 +203,7 @@ export class PaginaInicialUsuario implements OnInit {
   aliasChecking = false;
   aliasTaken = false;
 
-  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; }> = {};
+  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; misGustos: string[]; }> = {};
   private readonly MAX = { nombre: 100, apellidos: 100, alias: 12 };
   private readonly ALIAS_MIN = 3;
 
@@ -253,8 +261,18 @@ export class PaginaInicialUsuario implements OnInit {
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
-  private readonly DEFAULT_CATEGORIAS = ['Acción', 'Comedia', 'Drama', 'Suspenso', 'Animación', 'Ciencia Ficción', 'Terror', 'Documental', 'Romance', 'Aventura'];
+  private readonly DEFAULT_CATEGORIAS = TAGS_ALL;
   private readonly DEFAULT_RESOLUCIONES = ['480p', '720p', '1080p', '4K'];
+  private gustosKey(): string { return `gustos_${this.userEmail || 'anon'}`; }
+  private canonicalizeTags(list: string[]): string[] {
+    const norm = (t: string) => this.normalizeTag(t);
+    return list
+      .map(t => {
+        const target = TAGS_ALL.find(x => norm(x) === norm(t));
+        return target ?? this.t(t);
+      })
+      .filter(Boolean);
+  }
 
   get isUsuario(): boolean {
     const role = (this.loggedUser?.role ?? '').toString().toUpperCase();
@@ -263,6 +281,8 @@ export class PaginaInicialUsuario implements OnInit {
   }
 
   ngOnInit(): void {
+    this.updateCategoriasDisponiblesPorTipo();
+    this.gustosDisponibles = this.DEFAULT_CATEGORIAS.slice();
     this.computeReadOnlyFlags();
     this.bootstrapUser();
     this.cargarContenidos();
@@ -278,6 +298,58 @@ export class PaginaInicialUsuario implements OnInit {
     this.favsLoaded = true;
     if (this.filterMode === 'favoritos') this.applyFilter();
     this.cdr.markForCheck();
+  }
+  private loadGustosLocal(): string[] {
+    try {
+      const raw = localStorage.getItem(this.gustosKey());
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+  private persistGustosLocal(): void {
+    try { localStorage.setItem(this.gustosKey(), JSON.stringify(this.gustosSeleccionados)); } catch { }
+  }
+  private syncGustosBackendIfMissing(gustosBackend: string[], gustosCache: string[]): void {
+    if (gustosBackend.length === 0 && gustosCache.length > 0 && this.userEmail) {
+      const payload = { email: this.userEmail, misGustos: gustosCache };
+      try { this.auth.putPerfil(payload).subscribe({ next: () => { }, error: () => { } }); } catch { }
+    }
+  }
+  private syncGustosDisponibles(): void {
+    this.gustosDisponibles = TAGS_ALL.slice();
+  }
+  private updateCategoriasDisponiblesPorTipo(): void {
+    const tipo = String(this.filtrosContenido?.tipo || '').toUpperCase();
+    if (tipo === 'AUDIO') {
+      this.categoriasDisponibles = TAGS_AUDIO.slice();
+    } else if (tipo === 'VIDEO') {
+      this.categoriasDisponibles = TAGS_VIDEO.slice();
+    } else {
+      this.categoriasDisponibles = TAGS_ALL.slice();
+    }
+    if (!this.categoriasDisponibles.includes(this.filtrosContenido.categoria)) {
+      this.filtrosContenido.categoria = '';
+    }
+    this.syncGustosDisponibles();
+  }
+  isGusto(tag: string): boolean {
+    const norm = this.normalizeTag(tag);
+    return this.gustosSeleccionados.some(t => this.normalizeTag(t) === norm);
+  }
+  toggleGusto(tag: string, checked: boolean): void {
+    const clean = this.normalizeTag(tag);
+    if (!clean) return;
+    if (checked) {
+      const canon = this.canonicalizeTags([tag])[0];
+      if (canon && !this.gustosSeleccionados.some(t => this.normalizeTag(t) === clean)) {
+        this.gustosSeleccionados = [...this.gustosSeleccionados, canon];
+      }
+    } else {
+      this.gustosSeleccionados = this.gustosSeleccionados.filter(t => this.normalizeTag(t) !== clean);
+    }
+    this.persistGustosLocal();
   }
   cargarAlertas(): void {
     if (!this.userEmail) return;
@@ -423,7 +495,20 @@ export class PaginaInicialUsuario implements OnInit {
     const fullName = `${nombre} ${apellidos}`.trim();
     this.userName = this.t(u?.alias) || fullName || u?.email || this.userName;
     this.userInitials = this.initialsFrom(this.t(u?.alias) || fullName || u?.email || '');
-    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip };
+    const gustosRaw = Array.isArray(u?.misGustos)
+      ? u.misGustos
+      : typeof u?.misGustos === 'string'
+        ? u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean)
+        : [];
+    const gustosFromBackend = this.canonicalizeTags(Array.isArray(gustosRaw) ? gustosRaw : []);
+    const gustosFromCache = this.canonicalizeTags(this.loadGustosLocal());
+    const gustosFinal = gustosFromBackend.length > 0 ? gustosFromBackend : gustosFromCache;
+    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip, misGustos: gustosFinal };
+    this.gustosSeleccionados = gustosFinal
+      .map((g: string) => this.normalizeTag(g))
+      .filter(Boolean);
+    this.persistGustosLocal();
+    this.syncGustosBackendIfMissing(gustosFromBackend, gustosFromCache);
   }
   salirModoLectura(): void { localStorage.removeItem('users_readonly_mode'); localStorage.removeItem('users_readonly_from_admin'); this.router.navigateByUrl('/admin'); }
   CerrarSesion(): void {
@@ -478,7 +563,8 @@ export class PaginaInicialUsuario implements OnInit {
         email: this.userEmail, alias: aliasAEnviar, nombre: this.t(this.model?.nombre) || undefined, apellidos: this.t(this.model?.apellidos) || undefined,
         fechaNac: this.model?.fechaNac ? String(this.model.fechaNac).slice(0, 10) : undefined,
         vip: typeof this.model?.vip === 'boolean' ? this.model.vip : undefined,
-        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada
+        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada,
+        misGustos: this.gustosSeleccionados
       };
       const payload = this.cleanPayload(raw);
       this.auth.putPerfil(payload).subscribe({
@@ -580,8 +666,9 @@ export class PaginaInicialUsuario implements OnInit {
         this.catalogBackup = items.slice(0);
         this.contenidos = items;
         this.tiposDisponibles = this.DEFAULT_TIPOS.slice();
-        this.categoriasDisponibles = this.DEFAULT_CATEGORIAS.slice();
+        this.updateCategoriasDisponiblesPorTipo();
         this.resolucionesDisponibles = this.DEFAULT_RESOLUCIONES.slice();
+        this.syncGustosDisponibles();
         this.contenidosLoading = false;
         if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos();
         this.applyFilter();
@@ -880,7 +967,13 @@ private applyFilter(): void {
     return titleOk && tipoOk && roleOk && catOk && resOk && ageOk;
   }
 
-  private normalizeTag(t: unknown): string { return String(t ?? '').trim().toLowerCase(); }
+  private normalizeTag(t: unknown): string {
+    const raw = String(t ?? '').trim().toLowerCase();
+    return raw
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[^a-z0-9]+/g, '');
+  }
   private applyFrontFilters(): void {
     const base = this.catalogBackup ?? [];
     const f = this.filtrosContenido;
