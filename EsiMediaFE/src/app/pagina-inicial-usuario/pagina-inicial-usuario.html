@@ -1,4 +1,4 @@
-<div class="ro-banner" *ngIf="readOnly">
+﻿<div class="ro-banner" *ngIf="readOnly">
   <span>📖 Modo lectura activado — no puedes interactuar con esta página.</span>
   <button
     class="btn-cerrar"
@@ -178,7 +178,7 @@
               </div>
 
               <div class="filter-section">
-                <label for="categoria">🏷️ Categoría</label>
+                <label for="categoria">Categoría</label>
                 <select id="categoria" name="categoria"
                         [(ngModel)]="filtrosContenido.categoria"
                         (ngModelChange)="onFiltrosChange()">

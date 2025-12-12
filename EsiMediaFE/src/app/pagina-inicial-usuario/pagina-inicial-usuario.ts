@@ -12,6 +12,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { FavoritesService } from '../favorites.service';
 import { AlertasService, UserAlert } from '../alertas.service';
+import { TAGS_ALL, TAGS_AUDIO, TAGS_VIDEO } from '../tags.constants';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -129,9 +130,14 @@ export class PaginaInicialUsuario implements OnInit {
   categoriasDisponibles: string[] = [];
   resolucionesDisponibles: string[] = [];
   edadesDisponibles = [0, 6, 12, 16, 18];
-  onFiltrosChange(): void { this.applyFilter(); this.cdr.markForCheck(); }
+  onFiltrosChange(): void {
+    this.updateCategoriasDisponiblesPorTipo();
+    this.applyFilter();
+    this.cdr.markForCheck();
+  }
   resetFiltros(): void {
     this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
+    this.updateCategoriasDisponiblesPorTipo();
     this.applyFilter();
   }
 
@@ -255,7 +261,7 @@ export class PaginaInicialUsuario implements OnInit {
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
-  private readonly DEFAULT_CATEGORIAS = ['Acción', 'Comedia', 'Drama', 'Suspenso', 'Animación', 'Ciencia Ficción', 'Terror', 'Documental', 'Romance', 'Aventura'];
+  private readonly DEFAULT_CATEGORIAS = TAGS_ALL;
   private readonly DEFAULT_RESOLUCIONES = ['480p', '720p', '1080p', '4K'];
 
   get isUsuario(): boolean {
@@ -265,6 +271,7 @@ export class PaginaInicialUsuario implements OnInit {
   }
 
   ngOnInit(): void {
+    this.updateCategoriasDisponiblesPorTipo();
     this.gustosDisponibles = this.DEFAULT_CATEGORIAS.slice();
     this.computeReadOnlyFlags();
     this.bootstrapUser();
@@ -283,10 +290,21 @@ export class PaginaInicialUsuario implements OnInit {
     this.cdr.markForCheck();
   }
   private syncGustosDisponibles(): void {
-    const base = (this.categoriasDisponibles && this.categoriasDisponibles.length > 0)
-      ? this.categoriasDisponibles
-      : this.DEFAULT_CATEGORIAS;
-    this.gustosDisponibles = Array.from(new Set(base.map(t => t?.toString()?.trim()).filter(Boolean))) as string[];
+    this.gustosDisponibles = TAGS_ALL.slice();
+  }
+  private updateCategoriasDisponiblesPorTipo(): void {
+    const tipo = String(this.filtrosContenido?.tipo || '').toUpperCase();
+    if (tipo === 'AUDIO') {
+      this.categoriasDisponibles = TAGS_AUDIO.slice();
+    } else if (tipo === 'VIDEO') {
+      this.categoriasDisponibles = TAGS_VIDEO.slice();
+    } else {
+      this.categoriasDisponibles = TAGS_ALL.slice();
+    }
+    if (!this.categoriasDisponibles.includes(this.filtrosContenido.categoria)) {
+      this.filtrosContenido.categoria = '';
+    }
+    this.syncGustosDisponibles();
   }
   isGusto(tag: string): boolean {
     const norm = this.normalizeTag(tag);
@@ -613,7 +631,7 @@ export class PaginaInicialUsuario implements OnInit {
         this.catalogBackup = items.slice(0);
         this.contenidos = items;
         this.tiposDisponibles = this.DEFAULT_TIPOS.slice();
-        this.categoriasDisponibles = this.DEFAULT_CATEGORIAS.slice();
+        this.updateCategoriasDisponiblesPorTipo();
         this.resolucionesDisponibles = this.DEFAULT_RESOLUCIONES.slice();
         this.syncGustosDisponibles();
         this.contenidosLoading = false;

@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { UsersService } from '../users';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { TAGS_ALL } from '../tags.constants';
 
 type FixedRole = 'ADMINISTRADOR' | 'GESTOR_CONTENIDO';
 type RoleUi = 'usuario' | 'Gestor de Contenido' | 'Administrador';
@@ -18,7 +19,7 @@ const ALIAS_MIN = 3;
 const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 type MfaChoice = 'NONE' | 'EMAIL_OTP' | 'TOTP';
 
-const DEFAULT_GUSTOS = ['Acción','Comedia','Drama','Suspenso','Animación','Ciencia Ficción','Terror','Documental','Romance','Aventura'];
+const DEFAULT_GUSTOS = TAGS_ALL;
 
 const trim = (s: string) => (s || '').trim();
 const lower = (s: string) => trim(s).toLowerCase();
@@ -460,3 +461,4 @@ export class Registro implements OnInit, OnDestroy {
     return (this.pwnedCount ?? 0) > 0 ? `⚠️ Aparece en filtraciones <b>${this.pwnedCount}</b> veces. Elige otra.` : '✅ No aparece en filtraciones conocidas.';
   }
 }
+
