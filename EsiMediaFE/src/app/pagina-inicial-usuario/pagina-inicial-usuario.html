@@ -441,6 +441,7 @@
   <div class="edit-panel modal" [class.open]="editOpen" (click)="$event.stopPropagation()" (keydown)="handleKeyDown($event)">
     <h3>Editar perfil</h3>
 
+    <div class="form-scroll">
     <form (ngSubmit)="guardarCambios()">
       <div class="row">
         <label class="label-lock" for="email_ro">
@@ -516,6 +517,7 @@
 
       </div>
     </form>
+    </div>
   </div>
 
   <div
