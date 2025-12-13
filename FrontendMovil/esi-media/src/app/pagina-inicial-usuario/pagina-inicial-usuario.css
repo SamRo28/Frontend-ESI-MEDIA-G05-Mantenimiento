@@ -1,42 +1,110 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-
-:root {
-  --header-h: 64px;
-  --pop-gap: 24px;
-}
-
-:host,
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow-x: hidden;
-  font-family: 'Poppins', Arial, sans-serif;
-  background: #141414;
-  color: #fff;
-}
-
-
-.usuario-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.user-hero {
-  position: relative;
+/* --- TOP BAR (Mobile) --- */
+.app-top-bar {
+  display: none;
+  /* Hidden by default on desktop */
+  position: fixed;
   top: 0;
-  z-index: var(--z-header-max);
-  display: flex;
-  align-items: flex-start;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: var(--z-sticky-max);
+  padding: 0 16px;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 20px 12px;
-  background: radial-gradient(circle at top left, #1e293b 0, #020617 45%, #000 100%);
-  box-shadow: 0 2px 18px rgba(0, 0, 0, .6);
-  border-bottom: 1px solid rgba(148, 163, 184, .25);
+  padding-top: env(safe-area-inset-top, 0);
 }
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+}
+
+.btn-buzon-icon {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-buzon-icon:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-buzon-icon .badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #ef4444;
+  color: white;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1px solid #1f2937;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 900px) {
+  .app-top-bar {
+    display: flex;
+    /* Show on mobile */
+  }
+
+  .user-hero {
+    display: none;
+    /* Hide old hero on mobile if desired, or adjust */
+  }
+
+  .usuario-shell {
+    padding-top: 60px;
+    /* Space for top bar */
+    padding-bottom: 60px;
+    /* Space for bottom nav */
+  }
+
+  .user-layout {
+    padding: 10px;
+    /* Reduce padding on mobile */
+  }
+
+  .contenidos-section {
+    margin-top: 0;
+  }
+}
+
+/* --- Old Mobile Controls (Removed/Hidden) --- */
+.mobile-controls {
+  display: none;
+}
+
 
 .user-hero-left {
   display: flex;

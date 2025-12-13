@@ -229,11 +229,8 @@ export class Registro implements OnInit, OnDestroy {
     if (!this.showPasswordFields) return;
     this.pwnedCheckedFor = ''; this.pwnedCount = null;
     this.debouncer.set('pwned', async () => {
-      this.isCheckingPwned = !!this.pwd;
-      if (!this.pwd || this.pwd === this.pwnedCheckedFor) { this.isCheckingPwned = false; return; }
-      try { this.pwnedCount = await checkPasswordPwned(this.pwd); this.pwnedCheckedFor = this.pwd; }
-      catch { this.pwnedCount = null; this.pwnedCheckedFor = this.pwd; }
-      finally { this.isCheckingPwned = false; }
+      this.isCheckingPwned = false;
+      if (!this.pwd || this.pwd === this.pwnedCheckedFor) { return; }
     }, 700);
   }
 
@@ -317,10 +314,7 @@ export class Registro implements OnInit, OnDestroy {
     if (!this.showPasswordFields) return basicInvalid ? 'Hay campos con errores. Corrígelos y vuelve a intentarlo.' : null;
     if (basicInvalid || this.pwdIssues.length > 0 || this.pwdMismatch) return 'Hay campos con errores. Corrígelos y vuelve a intentarlo.';
     if (this.pwd && this.pwd !== this.pwnedCheckedFor) {
-      this.isCheckingPwned = true;
-      try { this.pwnedCount = await checkPasswordPwned(this.pwd); this.pwnedCheckedFor = this.pwd; }
-      catch { this.pwnedCount = null; this.pwnedCheckedFor = this.pwd; }
-      finally { this.isCheckingPwned = false; }
+      this.isCheckingPwned = false;
     }
     return (this.pwnedCount ?? 0) > 0 ? `Esta contraseña aparece en filtraciones públicas ${this.pwnedCount} veces.` : null;
   }

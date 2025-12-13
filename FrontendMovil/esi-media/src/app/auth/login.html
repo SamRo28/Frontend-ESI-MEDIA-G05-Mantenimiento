@@ -6,7 +6,7 @@
     Email inválido
   </div>
 
-  <label for="password">Contraseña XD</label>
+  <label for="password">Contraseña</label>
   <div class="pwd-row">
     <input id="password" [type]="showPwd ? 'text' : 'password'" formControlName="password" placeholder="••••••••"
       inputmode="text" />
@@ -76,4 +76,13 @@
 <div class="login-form" *ngIf="step === 'done'">
   <h3>Acceso concedido</h3>
   <p class="ok">¡Listo! Puedes continuar.</p>
+</div>
+
+<div class="login-form" *ngIf="step === 'restricted'">
+  <h3>Acceso Restringido</h3>
+  <p class="err" style="margin-top: 1rem;">{{ errorMsg }}</p>
+
+  <button type="button" class="btn-submit" (click)="resetToLogin()" style="background: #e74c3c; margin-top: 2rem;">
+    Volver al Inicio
+  </button>
 </div>

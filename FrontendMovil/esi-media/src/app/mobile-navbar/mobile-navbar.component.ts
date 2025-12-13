@@ -11,9 +11,8 @@ import { CommonModule } from '@angular/common';
 export class MobileNavbarComponent {
     @Input() filtersActive: boolean = false;
     @Input() alertCount: number = 0;
+    @Input() activeView: string = 'todos';
     @Output() toggleFilters = new EventEmitter<void>();
     @Output() openProfile = new EventEmitter<void>();
-    @Output() openAlerts = new EventEmitter<void>();
-    @Output() logout = new EventEmitter<void>();
-    @Output() home = new EventEmitter<void>();
+    @Output() viewChange = new EventEmitter<string>();
 }
