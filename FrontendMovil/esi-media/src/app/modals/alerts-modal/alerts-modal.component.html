@@ -35,7 +35,8 @@
         <div *ngFor="let alerta of alertas" class="alert-card">
           <div class="alert-header">
             <span class="alert-badge" [class.badge-new]="alerta.type === 'NEW_CONTENT'" 
-                  [class.badge-expiring]="alerta.type === 'CONTENT_EXPIRING'">
+                  [class.badge-expiring]="alerta.type === 'CONTENT_EXPIRING'"
+                  [class.badge-interest]="alerta.type === 'CONTENT_MATCHES_INTERESTS'">
               {{ getAlertTypeLabel(alerta.type) }}
             </span>
             <span class="alert-date" *ngIf="alerta.creadaEn">

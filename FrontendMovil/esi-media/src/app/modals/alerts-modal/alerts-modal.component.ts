@@ -48,9 +48,11 @@ export class AlertsModalComponent {
   getAlertTypeLabel(type: string): string {
     switch (type) {
       case 'NEW_CONTENT':
-        return 'NUEVO CONTENIDO';
+        return '📢 NUEVO CONTENIDO';
       case 'CONTENT_EXPIRING':
-        return 'CONTENIDO EXPIRA';
+        return '⏰ CONTENIDO EXPIRA';
+      case 'CONTENT_MATCHES_INTERESTS':
+        return '🎯 CONTENIDO BASADO EN TUS GUSTOS';
       default:
         return type || 'ALERTA';
     }
