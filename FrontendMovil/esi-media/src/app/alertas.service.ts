@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from './environments/environment';
 
-export type AlertType = 'NEW_CONTENT' | 'CONTENT_EXPIRING';
+export type AlertType = 'NEW_CONTENT' | 'CONTENT_EXPIRING' | 'CONTENT_MATCHES_INTERESTS';
 
 export interface UserAlert {
   id: string;
