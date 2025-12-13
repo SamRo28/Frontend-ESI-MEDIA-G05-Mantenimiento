@@ -351,11 +351,24 @@ export class PaginaInicialUsuario implements OnInit {
     }
     this.persistGustosLocal();
   }
+  private resolveUserEmail(): string | null {
+    const norm = (v: string | null | undefined) => v ? v.trim().toLowerCase() : '';
+    const fromState = norm(this.userEmail);
+    if (fromState) return fromState;
+    const sessionUser = this.auth.getCurrentUser?.();
+    const fromSession = norm(sessionUser?.email);
+    if (fromSession) return fromSession;
+    const stored = this.getUserFromLocalStorage();
+    const fromStored = norm(stored?.email);
+    if (fromStored) return fromStored;
+    return null;
+  }
   cargarAlertas(): void {
-    if (!this.userEmail) return;
+    const email = this.resolveUserEmail();
+    if (!email) return;
     this.alertasLoading = true;
     this.alertasError = null;
-    this.alertasSvc.listar(this.userEmail).subscribe({
+    this.alertasSvc.listar(email).subscribe({
       next: (arr) => {
         this.alertas = arr || [];
         this.alertasLoading = false;
@@ -372,11 +385,37 @@ export class PaginaInicialUsuario implements OnInit {
     this.showAlertas = !this.showAlertas;
     if (this.showAlertas) this.cargarAlertas();
   }
-  eliminarAlerta(a: UserAlert): void {
-    if (!a || !a.id || this.readOnly || !this.userEmail) return;
-    if (!confirm('¿Eliminar esta alerta?')) return;
+  eliminarAlerta(a: UserAlert, opts?: { retried?: boolean; skipConfirm?: boolean }): void {
+    const email = this.resolveUserEmail();
+    if (!a || !a.id || this.readOnly || !email) return;
+    if (!opts?.skipConfirm && !confirm('Eliminar esta alerta?')) return;
+
+    if (!opts?.retried) {
+      // Refrescamos antes de borrar para asegurarnos de tener el ID real
+      this.alertasLoading = true;
+      this.alertasSvc.listar(email).subscribe({
+        next: (arr) => {
+          this.alertas = arr || [];
+          this.alertasLoading = false;
+          const candidato = this.pickAlertaParaRetry(a, this.alertas);
+          this.cdr.markForCheck();
+          if (candidato?.id) {
+            this.eliminarAlerta(candidato, { retried: true, skipConfirm: true });
+          } else {
+            Swal.fire({ icon: 'info', title: 'Buzon', text: 'Se ha refrescado el buzón. Vuelve a intentar eliminar la alerta.' });
+          }
+        },
+        error: (e) => {
+          this.alertasLoading = false;
+          this.alertasError = e?.error?.message || e?.message || 'No se pudieron cargar las alertas';
+          this.cdr.markForCheck();
+        }
+      });
+      return;
+    }
+
     this.alertasEliminando[a.id] = true;
-    this.alertasSvc.eliminar(this.userEmail, a.id).subscribe({
+    this.alertasSvc.eliminar(email, a.id).subscribe({
       next: () => {
         this.alertas = this.alertas.filter(x => x.id !== a.id);
         delete this.alertasEliminando[a.id];
@@ -384,11 +423,32 @@ export class PaginaInicialUsuario implements OnInit {
       },
       error: (e) => {
         delete this.alertasEliminando[a.id];
+        const status = e?.status;
+        if (!opts?.retried && (status === 400 || status === 404)) {
+          this.eliminarAlerta(a, { retried: true, skipConfirm: true });
+          return;
+        }
         const msg = e?.error?.message || e?.message || 'No se pudo eliminar la alerta';
-        Swal.fire({ icon: 'error', title: 'Buzón', text: msg });
+        Swal.fire({ icon: 'error', title: 'Buzon', text: msg });
         this.cdr.markForCheck();
       }
     });
+  }
+  private pickAlertaParaRetry(target: UserAlert, list: UserAlert[]): UserAlert | null {
+    if (!list?.length) return null;
+    if (target?.id) {
+      const byId = list.find(x => x.id === target.id);
+      if (byId) return byId;
+    }
+    if (target?.contenidoId) {
+      const byContent = list.find(x => x.contenidoId === target.contenidoId);
+      if (byContent) return byContent;
+    }
+    if (target?.tituloContenido) {
+      const byTitle = list.find(x => x.tituloContenido === target.tituloContenido);
+      if (byTitle) return byTitle;
+    }
+    return list[0] || null;
   }
   loadFavoritos(): void {
     this.apiListFavIds().subscribe({
