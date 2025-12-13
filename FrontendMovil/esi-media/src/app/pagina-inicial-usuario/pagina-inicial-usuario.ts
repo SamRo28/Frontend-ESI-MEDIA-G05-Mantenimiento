@@ -166,6 +166,10 @@ export class PaginaInicialUsuario implements OnInit {
   pendingToggle: Record<string, boolean> = {};
   private onlyFavsView = false;
 
+  // History
+  private historyIds = new Set<string>();
+  historyLoaded = false;
+
   playerOpen = false;
   playerSrc: string | null = null;
   playerKind: 'AUDIO' | 'VIDEO' | 'EMBED' = 'VIDEO';
@@ -451,6 +455,46 @@ export class PaginaInicialUsuario implements OnInit {
     }
   }
 
+
+  loadHistory(): void {
+    if (!this.userEmail) return;
+    try {
+      const key = `user_history_${this.userEmail}`;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          this.historyIds = new Set(arr);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading history', e);
+    }
+    this.historyLoaded = true;
+    this.cdr.markForCheck();
+  }
+
+  pushToHistory(c: Contenido): void {
+    if (!this.userEmail || !c?.id) return;
+    try {
+      const key = `user_history_${this.userEmail}`;
+      let arr: string[] = [];
+      const raw = localStorage.getItem(key);
+      if (raw) arr = JSON.parse(raw);
+
+      // Remove to avoid dupes, add to front
+      arr = arr.filter(x => x !== c.id);
+      arr.unshift(c.id);
+
+      // Limit size
+      if (arr.length > 50) arr = arr.slice(0, 50);
+
+      localStorage.setItem(key, JSON.stringify(arr));
+      this.historyIds = new Set(arr);
+      this.cdr.markForCheck();
+    } catch (e) { console.error('Error pushing history', e); }
+  }
+
   private computeReadOnlyFlags(): void {
     const qp = this.route.snapshot.queryParamMap;
     const qModo = (qp.get('modoLectura') || '').toLowerCase();
@@ -537,6 +581,38 @@ export class PaginaInicialUsuario implements OnInit {
   openAvatarModal() { this.showAvatarModal = true; }
   closeAvatarModal() { this.showAvatarModal = false; }
   selectAvatar(a: string) { this.selectedAvatar = a; this.foto = a; this.closeAvatarModal(); }
+  onProfileClicked() {
+    Swal.fire({
+      title: 'Opciones de perfil',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'Editar Perfil',
+      denyButtonText: 'Cerrar Sesión',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      denyButtonColor: '#d33',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.toggleEditar();
+      } else if (result.isDenied) {
+        this.CerrarSesion();
+      }
+    });
+  }
+
+  onViewChange(view: string) {
+    if (view === 'inicio') view = 'todos';
+
+    // Cast to literal type to satisfy TS if needed, logic remains valid
+    const validModes = ['todos', 'favoritos', 'historial'];
+    if (validModes.includes(view)) {
+      this.filterMode = view as 'todos' | 'favoritos' | 'historial';
+      this.onFilterChange();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.cdr.detectChanges(); // Force update
+    }
+  }
+
   toggleEditar() { if (this.readOnly) return; requestAnimationFrame(() => { this.editOpen = !this.editOpen; this.cdr.markForCheck(); }); }
   toggleCrearListaPanel(): void {
     if (this.readOnly) return;
@@ -791,7 +867,10 @@ export class PaginaInicialUsuario implements OnInit {
     this.playerOpen = true;
     this.openedInternally = true;
     this.openedExternally = false;
-    if (isUsuario) this.incrementViews(content);
+    if (isUsuario) {
+      this.incrementViews(content);
+      this.pushToHistory(content);
+    }
     this.cdr.markForCheck();
   }
 
@@ -804,7 +883,10 @@ export class PaginaInicialUsuario implements OnInit {
     this.playingTitle = content.titulo || null;
     this.playerOpen = true;
     this.openedInternally = true;
-    if (isUsuario) this.incrementViews(content);
+    if (isUsuario) {
+      this.incrementViews(content);
+      this.pushToHistory(content);
+    }
     this.cdr.markForCheck();
   }
 
@@ -862,7 +944,11 @@ export class PaginaInicialUsuario implements OnInit {
   }
 
   filterMode: 'todos' | 'favoritos' | 'historial' = 'todos';
-  onFilterChange(): void { if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos(); this.applyFilter(); }
+  onFilterChange(): void {
+    if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos();
+    if (this.filterMode === 'historial') this.loadHistory();
+    this.applyFilter();
+  }
 
   private applyFilter(): void {
     const base0: Contenido[] = this.catalogBackup ?? this.contenidos.slice(0);
@@ -873,14 +959,17 @@ export class PaginaInicialUsuario implements OnInit {
     const applyModeFilter = (src: Contenido[]): Contenido[] | null => {
       if (this.filterMode === 'favoritos') {
         if (!this.favsLoaded) {
-          this.filteredCon = src.slice(0);
+          // While loading favorites, avoid showing "Todos". Show empty or keep current.
+          // Better to return empty so user knows it's filtering.
+          this.filteredCon = [];
           this.page = 1;
           return null;
         }
         const favSet = this.favIds;
         return src.filter(c => favSet.has(c.id));
       } else if (this.filterMode === 'historial') {
-        return src.filter(c => (c.reproducciones ?? 0) > 0);
+        if (!this.historyLoaded) this.loadHistory();
+        return src.filter(c => this.historyIds.has(c.id));
       }
       return src;
     };

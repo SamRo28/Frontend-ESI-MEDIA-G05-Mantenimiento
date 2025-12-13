@@ -4,7 +4,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-sticky-max);
+    z-index: 9999;
     /* Ensure it's above everything */
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(10px);
@@ -66,6 +66,7 @@
 .nav-item.active,
 .nav-item:active {
     color: #38bdf8;
+    /* Highlight color for active state */
 }
 
 .nav-item:hover {

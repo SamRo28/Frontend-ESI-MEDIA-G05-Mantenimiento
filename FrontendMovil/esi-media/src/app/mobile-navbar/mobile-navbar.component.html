@@ -1,5 +1,6 @@
 <nav class="mobile-nav">
-    <button type="button" class="nav-item" (click)="home.emit()">
+    <!-- Inicio (Todos) -->
+    <button type="button" class="nav-item" [class.active]="activeView === 'todos'" (click)="viewChange.emit('todos')">
         <span class="icon">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
@@ -8,6 +9,31 @@
         <span class="label">Inicio</span>
     </button>
 
+    <!-- Favoritos -->
+    <button type="button" class="nav-item" [class.active]="activeView === 'favoritos'"
+        (click)="viewChange.emit('favoritos')">
+        <span class="icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+        </span>
+        <span class="label">Favs</span>
+    </button>
+
+    <!-- Historial -->
+    <button type="button" class="nav-item" [class.active]="activeView === 'historial'"
+        (click)="viewChange.emit('historial')">
+        <span class="icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path
+                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+            </svg>
+        </span>
+        <span class="label">Historial</span>
+    </button>
+
+    <!-- Filtros -->
     <button type="button" class="nav-item" [class.active]="filtersActive" (click)="toggleFilters.emit()">
         <span class="icon">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
@@ -17,18 +43,7 @@
         <span class="label">Filtros</span>
     </button>
 
-    <button type="button" class="nav-item" (click)="openAlerts.emit()">
-        <span class="icon icon-with-badge">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-            </svg>
-            @if (alertCount > 0) {
-                <span class="badge">{{ alertCount > 99 ? '99+' : alertCount }}</span>
-            }
-        </span>
-        <span class="label">Buzón</span>
-    </button>
-
+    <!-- Perfil -->
     <button type="button" class="nav-item" (click)="openProfile.emit()">
         <span class="icon">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
@@ -37,15 +52,5 @@
             </svg>
         </span>
         <span class="label">Perfil</span>
-    </button>
-
-    <button type="button" class="nav-item" (click)="logout.emit()">
-        <span class="icon">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                <path
-                    d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
-            </svg>
-        </span>
-        <span class="label">Salir</span>
     </button>
 </nav>

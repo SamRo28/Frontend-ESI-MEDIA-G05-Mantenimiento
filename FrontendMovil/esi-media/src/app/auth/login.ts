@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { BackendLoginResponse, MfaMethod, UserDto } from './models';
 
-type Step = 'login' | 'mfa' | 'captcha' | 'done';
+type Step = 'login' | 'mfa' | 'captcha' | 'done' | 'restricted';
 
 @Component({
   selector: 'app-login',
@@ -36,7 +36,7 @@ export class LoginComponent implements OnDestroy {
   remainingAttempts: number | null = null;
   retryAfterSeconds: number | null = null;
   countdown = 0;
-  private timer: any ;
+  private timer: any;
 
   currentUser: UserDto | null = null;
 
@@ -61,7 +61,7 @@ export class LoginComponent implements OnDestroy {
     const go = () =>
       this.router.navigateByUrl(url, {
         replaceUrl: true,
-        state: { user }, 
+        state: { user },
       });
 
     const anyDoc = document as any;
@@ -79,6 +79,35 @@ export class LoginComponent implements OnDestroy {
     };
     const target = map[user.role] ?? '/usuario';
     this.navigateWithTransition(target, user);
+  }
+
+  private handleLoginSuccess(user: UserDto) {
+    if (user.role === 'ADMINISTRADOR' || user.role === 'GESTOR_CONTENIDO') {
+      this.errorMsg = 'Esta cuenta no puede ser utilizada en la versión móvil, por favor acceda desde la web';
+      this.loading = false;
+      this.step = 'restricted';
+      return;
+    }
+
+    this.okMsg = `Bienvenido, ${user.nombre ?? user.email}`;
+    // Si viene de MFA/Captcha, el mensaje podría ser distinto, pero
+    // para simplificar y unificar, se puede dejar genérico o manejarlo por parámetro si se desea.
+    // Sin embargo, el requisito principal es el bloqueo.
+
+    this.auth.saveSession(user);
+    this.currentUser = user;
+    this.step = 'done';
+    this.redirectByRole(user);
+  }
+
+  resetToLogin() {
+    this.step = 'login';
+    this.errorMsg = '';
+    this.okMsg = '';
+    this.form.reset();
+    this.mfaForm.reset();
+    this.captchaForm.reset();
+    this.loading = false;
   }
 
   submit() {
@@ -108,11 +137,7 @@ export class LoginComponent implements OnDestroy {
         }
 
         if (res.user) {
-          this.okMsg = `Bienvenido, ${res.user.nombre ?? res.user.email}`;
-          this.auth.saveSession(res.user);
-          this.currentUser = res.user;
-          this.step = 'done';
-          this.redirectByRole(res.user);
+          this.handleLoginSuccess(res.user);
           return;
         }
 
@@ -146,11 +171,7 @@ export class LoginComponent implements OnDestroy {
         }
 
         if (r?.user) {
-          this.okMsg = 'Segundo factor verificado correctamente.';
-          this.auth.saveSession(r.user);
-          this.currentUser = r.user;
-          this.step = 'done';
-          this.redirectByRole(r.user);
+          this.handleLoginSuccess(r.user);
           return;
         }
 
@@ -188,11 +209,7 @@ export class LoginComponent implements OnDestroy {
         this.loading = false;
 
         if (r?.user) {
-          this.okMsg = 'Captcha verificado correctamente.';
-          this.auth.saveSession(r.user);
-          this.currentUser = r.user;
-          this.step = 'done';
-          this.redirectByRole(r.user);
+          this.handleLoginSuccess(r.user);
           return;
         }
 
