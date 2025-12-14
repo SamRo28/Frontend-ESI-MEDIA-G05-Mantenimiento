@@ -17,7 +17,7 @@ export interface ListaPublica {
 
 @Injectable({ providedIn: 'root' })
 export class ListasPublicasService {
-  private readonly apiUrl = `http://${environment.apiHost}:8082/listas`;
+  private readonly apiUrl = `${environment.API_BASE}/listas`;
 
   constructor(private http: HttpClient) { }
 
@@ -26,7 +26,7 @@ export class ListasPublicasService {
   }
 
   listarListas(): Observable<ListaPublica[]> {
-    return this.http.get<ListaPublica[]>(`http://${environment.apiHost}:8082/listas/publicas`);
+    return this.http.get<ListaPublica[]>(`${environment.API_BASE}/listas/publicas`);
   }
 
 

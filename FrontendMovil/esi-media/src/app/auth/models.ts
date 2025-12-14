@@ -48,18 +48,19 @@ export interface AppUser {
   email: string;
   role: Role;
   blocked: boolean;
-  fechaNac?:string;
+  fechaNac?: string;
   vip?: boolean;
   createdAt?: string;
   descripcion?: string;
-  tipoContenido?:string;
+  tipoContenido?: string;
   especialidad?: string;
   fotoUrl?: string | null;
   foto?: string | null;
   departamento?: string;
+  misGustos?: string[];
 }
 
-export interface CreatorDto extends AppUser {}
+export interface CreatorDto extends AppUser { }
 
 export interface CreateCreatorRequest {
   nombre: string;
@@ -73,7 +74,7 @@ export interface CreateCreatorRequest {
 }
 
 export type tipoContenido = 'VIDEO' | 'AUDIO';
-export interface Contenido{
+export interface Contenido {
   id: string;
   userEmail: string;
   titulo: string;
@@ -90,5 +91,5 @@ export interface Contenido{
   restringidoEdad: number;
   tipo: tipoContenido;
   imagen?: string;
-  reproducciones:number;
+  reproducciones: number;
 }

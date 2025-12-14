@@ -19,9 +19,9 @@ export interface UserAlert {
 
 @Injectable({ providedIn: 'root' })
 export class AlertasService {
-  private readonly baseUrl = `http://${environment.apiHost}:8081/users/alertas`;
+  private readonly baseUrl = `${environment.USERS_API_BASE}/users/alertas`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   listar(email: string): Observable<UserAlert[]> {
     const e = encodeURIComponent(email);

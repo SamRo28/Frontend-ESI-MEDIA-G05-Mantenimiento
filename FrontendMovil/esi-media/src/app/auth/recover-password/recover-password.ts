@@ -26,7 +26,7 @@ export class RecoverPassword {
     }
 
     this.cargando = true;
-    this.http.post(`http://${environment.apiHost}:8081/users/forgot-password`, { email: this.email }).subscribe({
+    this.http.post(`${environment.USERS_API_BASE}/users/forgot-password`, { email: this.email }).subscribe({
       next: (res: any) => {
         this.cargando = false;
         Swal.fire('Éxito', res.message || 'Correo enviado correctamente', 'success');

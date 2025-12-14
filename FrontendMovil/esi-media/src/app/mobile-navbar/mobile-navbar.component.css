@@ -17,7 +17,10 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 60px;
+    min-height: 60px;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: content-box; /* Ensure padding adds to height if needed, or stick to border-box and let min-height handle it. Let's stick to standard behavior but ensure height grows. */
+    height: auto;
 }
 
 .nav-item {

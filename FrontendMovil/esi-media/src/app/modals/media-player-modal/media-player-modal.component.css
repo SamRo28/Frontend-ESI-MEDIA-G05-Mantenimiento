@@ -2,7 +2,8 @@
     display: block;
     position: fixed;
     inset: 0;
-    z-index: var(--z-player-modal);
+    z-index: 10000;
+    /* Ensure it's above mobile navbar (9999) */
 }
 
 .player-overlay {
@@ -130,6 +131,8 @@
         left: 0;
         right: 0;
         z-index: 10;
+        padding-top: calc(10px + env(safe-area-inset-top));
+        /* Respect status bar */
     }
 
     .player-body {

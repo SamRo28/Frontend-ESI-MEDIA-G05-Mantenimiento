@@ -51,7 +51,7 @@ const basePayload = (d: Pick<RegistroDatos, 'nombre' | 'apellidos' | 'email' | '
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  private readonly baseUrl = `http://${environment.apiHost}:8081/users`;
+  private readonly baseUrl = `${environment.USERS_API_BASE}/users`;
   private readonly registrarUrl = `${this.baseUrl}/Registrar`;
   private readonly forgotUrl = `${this.baseUrl}/forgot-password`;
   private readonly checkAliasUrl = `${this.baseUrl}/check-alias`;
