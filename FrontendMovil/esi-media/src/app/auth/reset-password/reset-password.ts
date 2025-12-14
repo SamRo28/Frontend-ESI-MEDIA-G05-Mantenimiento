@@ -57,7 +57,7 @@ export class ResetPassword {
     }
 
     this.cargando = true;
-    this.http.post(`http://${environment.apiHost}:8081/users/reset-password`, {
+    this.http.post(`${environment.USERS_API_BASE}/users/reset-password`, {
       token: this.token,
       newPassword: this.pwd
     }).subscribe({

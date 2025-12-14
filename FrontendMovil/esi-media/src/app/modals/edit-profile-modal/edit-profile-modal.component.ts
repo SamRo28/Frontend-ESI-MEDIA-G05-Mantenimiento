@@ -13,6 +13,7 @@ export class EditProfileModalComponent {
     @Input() userEmail: string = '';
     @Input() model: any = {};
     @Input() readOnly: boolean = false;
+    @Input() gustosDisponibles: string[] = [];
 
     @Input() aliasError: string | null = null;
     @Input() aliasChecking: boolean = false;
@@ -56,5 +57,18 @@ export class EditProfileModalComponent {
     onVipModelChange(val: boolean) {
         this.model.vip = val;
         this.vipChange.emit(val);
+    }
+
+    isGusto(tag: string): boolean {
+        return (this.model.misGustos || []).includes(tag);
+    }
+
+    toggleGusto(tag: string, checked: boolean) {
+        const clean = (tag || '').trim();
+        if (!clean) return;
+        let set = new Set<string>(this.model.misGustos || []);
+        if (checked) set.add(clean);
+        else set.delete(clean);
+        this.model.misGustos = Array.from(set);
     }
 }

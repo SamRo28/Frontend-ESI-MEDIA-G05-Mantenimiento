@@ -456,8 +456,8 @@
 
   <app-edit-profile-modal *ngIf="editOpen" [userEmail]="userEmail" [model]="model" [readOnly]="readOnly"
     [aliasError]="aliasError" [aliasChecking]="aliasChecking" [aliasTaken]="aliasTaken" [saving]="saving"
-    [okMsg]="okMsg" [errorMsg]="errorMsg" [selectedAvatar]="selectedAvatar" (close)="cancelarEditar()"
-    (save)="guardarCambios()" (darDeBaja)="DarDeBaja()" (openAvatarModal)="openAvatarModal()"
+    [okMsg]="okMsg" [errorMsg]="errorMsg" [selectedAvatar]="selectedAvatar" [gustosDisponibles]="gustosDisponibles"
+    (close)="cancelarEditar()" (save)="guardarCambios()" (darDeBaja)="DarDeBaja()" (openAvatarModal)="openAvatarModal()"
     (aliasChange)="onAliasChange($event)" (vipChange)="onVipChanged($event)">
   </app-edit-profile-modal>
 
@@ -494,8 +494,8 @@
   </app-alerts-modal>
 
   <app-mobile-navbar [activeView]="filterMode === 'todos' ? 'todos' : filterMode" [filtersActive]="showFilters"
-    [alertCount]="alertCount" (toggleFilters)="toggleFilters()" (openProfile)="onProfileClicked()"
-    (viewChange)="onViewChange($event)">
+    [alertCount]="alertCount" [edicionPerfil]="editOpen" (toggleFilters)="toggleFilters()"
+    (openProfile)="onProfileClicked()" (viewChange)="onViewChange($event)">
   </app-mobile-navbar>
 
 </div>

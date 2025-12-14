@@ -52,10 +52,22 @@
         </div>
 
 
+
         <div class="row">
             <label>VIP
                 <input type="checkbox" [ngModel]="model.vip" name="vip" (ngModelChange)="onVipModelChange($event)" />
             </label>
+        </div>
+
+        <div class="gustos-block" *ngIf="gustosDisponibles?.length">
+            <label class="gustos-label">Mis gustos</label>
+            <div class="chips-select">
+                <label class="chip-option" *ngFor="let tag of gustosDisponibles">
+                    <input type="checkbox" [checked]="isGusto(tag)" (change)="toggleGusto(tag, $event.target.checked)">
+                    <span>{{ tag }}</span>
+                </label>
+            </div>
+            <small class="chips-hint">Selecciona tus preferencias para recomendaciones</small>
         </div>
 
         <div class="Avatar">

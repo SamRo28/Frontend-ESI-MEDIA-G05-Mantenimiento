@@ -12,6 +12,7 @@ export class MobileNavbarComponent {
     @Input() filtersActive: boolean = false;
     @Input() alertCount: number = 0;
     @Input() activeView: string = 'todos';
+    @Input() edicionPerfil: boolean = false;
     @Output() toggleFilters = new EventEmitter<void>();
     @Output() openProfile = new EventEmitter<void>();
     @Output() viewChange = new EventEmitter<string>();

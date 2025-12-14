@@ -21,6 +21,7 @@ import { MobileNavbarComponent } from '../mobile-navbar/mobile-navbar.component'
 import { ListasPublicasService, ListaPublica } from '../listas-publicas.service';
 import { AlertsModalComponent } from '../modals/alerts-modal/alerts-modal.component';
 import { AlertasService, UserAlert } from '../alertas.service';
+import { TAGS_ALL, TAGS_AUDIO, TAGS_VIDEO } from '../tags.constants';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -69,9 +70,6 @@ function isDirectMedia(url: string): boolean {
   return l.endsWith('.mp4') || l.endsWith('.webm') || l.endsWith('.ogg') || l.endsWith('.m3u8');
 }
 
-
-
-
 @Component({
   selector: 'app-pagina-inicial-usuario',
   standalone: true,
@@ -109,6 +107,7 @@ export class PaginaInicialUsuario implements OnInit {
 
   showFilters = false;
   toggleFilters() {
+    if (this.editOpen) return;
     this.showFilters = !this.showFilters;
     this.cdr.markForCheck();
   }
@@ -158,8 +157,8 @@ export class PaginaInicialUsuario implements OnInit {
     this.applyFilter();
   }
 
-  private readonly CONTENIDOS_BASE = `http://${environment.apiHost}:8082/Contenidos`;
-  private readonly LISTAS_BASE = `http://${environment.apiHost}:8082/listas`;
+  private readonly CONTENIDOS_BASE = `${environment.API_BASE}/Contenidos`;
+  private readonly LISTAS_BASE = `${environment.API_BASE}/listas`;
 
   private favIds = new Set<string>();
   favsLoaded = false;
@@ -214,7 +213,10 @@ export class PaginaInicialUsuario implements OnInit {
   aliasChecking = false;
   aliasTaken = false;
 
-  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; }> = {};
+  gustosDisponibles: string[] = [];
+  gustosSeleccionados: string[] = [];
+
+  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; misGustos: string[] }> = {};
   private readonly MAX = { nombre: 100, apellidos: 100, alias: 12 };
   private readonly ALIAS_MIN = 3;
 
@@ -259,6 +261,39 @@ export class PaginaInicialUsuario implements OnInit {
     return s.slice(0, 10);
   }
 
+  // --- Taste Tags Helpers ---
+  private canonicalizeTags(tags: string[]): string[] {
+    return Array.from(new Set(tags.map(t => this.normalizeTasteTag(t)).filter(Boolean)));
+  }
+  private normalizeTasteTag(t: string): string {
+    return (t || '').trim();
+  }
+  private loadGustosLocal(): string[] {
+    try {
+      const raw = localStorage.getItem(`user_gustos_${this.userEmail}`);
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch { return []; }
+  }
+  private persistGustosLocal() {
+    if (!this.userEmail) return;
+    localStorage.setItem(`user_gustos_${this.userEmail}`, JSON.stringify(this.gustosSeleccionados));
+  }
+  private syncGustosBackendIfMissing(fromBackend: string[], fromCache: string[]) {
+    // Si backend viene vacío, pero tengo local => enviar local al backend
+    // Esto es "auto-reparación" silenciosa.
+    if (fromBackend.length === 0 && fromCache.length > 0 && !this.readOnly) {
+      this.gustosSeleccionados = fromCache;
+      // Podríamos disparar guardarCambios(), pero es arriesgado hacerlo automático sin pedir confirmación.
+      // Mejor lo dejamos en UI. Si el usuario abre perfil, verá sus gustos locales. Al guardar, se suben.
+    }
+  }
+  private syncGustosDisponibles() {
+    this.gustosDisponibles = TAGS_ALL.slice();
+    // Podríamos filtrar solo AUDIO/VIDEO según tiposDisponibles, 
+    // pero TAGS_ALL ya cubre todo.
+  }
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -287,6 +322,7 @@ export class PaginaInicialUsuario implements OnInit {
     this.bootstrapUser();
     this.cargarContenidos();
     this.cargarListasPublicas();
+    this.syncGustosDisponibles();
   }
 
   cargarListasPublicas() {
@@ -554,7 +590,31 @@ export class PaginaInicialUsuario implements OnInit {
     const fullName = `${nombre} ${apellidos}`.trim();
     this.userName = this.t(u?.alias) || fullName || u?.email || this.userName;
     this.userInitials = this.initialsFrom(this.t(u?.alias) || fullName || u?.email || '');
-    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip };
+
+    // Gustos
+    const gustosRaw = Array.isArray(u?.misGustos)
+      ? u.misGustos
+      : typeof u?.misGustos === 'string'
+        ? u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean)
+        : [];
+    const gustosFromBackend = this.canonicalizeTags(Array.isArray(gustosRaw) ? gustosRaw : []);
+    const gustosFromCache = this.canonicalizeTags(this.loadGustosLocal());
+    const gustosFinal = gustosFromBackend.length > 0 ? gustosFromBackend : gustosFromCache;
+
+    this.model = {
+      nombre: u?.nombre ?? '',
+      apellidos: u?.apellidos ?? '',
+      alias: u?.alias ?? '',
+      fechaNac: this.formatISODate(u?.fechaNac),
+      foto: u?.foto ?? u?.fotoUrl ?? '',
+      vip: !!u?.vip,
+      misGustos: gustosFinal
+    };
+    this.gustosSeleccionados = gustosFinal
+      .map((g: string) => this.normalizeTag(g))
+      .filter(Boolean);
+    this.persistGustosLocal();
+    this.syncGustosBackendIfMissing(gustosFromBackend, gustosFromCache);
   }
   salirModoLectura(): void { localStorage.removeItem('users_readonly_mode'); localStorage.removeItem('users_readonly_from_admin'); this.router.navigateByUrl('/admin'); }
   CerrarSesion(): void {
@@ -601,6 +661,10 @@ export class PaginaInicialUsuario implements OnInit {
   }
 
   onViewChange(view: string) {
+    if (this.editOpen) {
+      this.editOpen = false;
+      this.cdr.markForCheck();
+    }
     if (view === 'inicio') view = 'todos';
 
     // Cast to literal type to satisfy TS if needed, logic remains valid
@@ -641,7 +705,8 @@ export class PaginaInicialUsuario implements OnInit {
         email: this.userEmail, alias: aliasAEnviar, nombre: this.t(this.model?.nombre) || undefined, apellidos: this.t(this.model?.apellidos) || undefined,
         fechaNac: this.model?.fechaNac ? String(this.model.fechaNac).slice(0, 10) : undefined,
         vip: typeof this.model?.vip === 'boolean' ? this.model.vip : undefined,
-        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada
+        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada,
+        misGustos: this.model.misGustos // Se actualiza via modal
       };
       const payload = this.cleanPayload(raw);
       this.auth.putPerfil(payload).subscribe({
@@ -654,6 +719,8 @@ export class PaginaInicialUsuario implements OnInit {
     this.paintFromProfile(perfil);
     this.editOpen = false; this.okMsg = 'Se ha editado correctamente'; this.errorMsg = ''; this.saving = false;
     if (this.selectedAvatar) this.userAvatar = this.selectedAvatar;
+    this.gustosSeleccionados = this.model.misGustos || [];
+    this.persistGustosLocal();
     this.cargarContenidos();
     void Swal.fire({ icon: 'success', title: 'Se ha editado correctamente', timer: 1500, showConfirmButton: false });
     this.cdr.markForCheck();

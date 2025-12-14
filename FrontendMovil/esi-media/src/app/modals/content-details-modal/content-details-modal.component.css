@@ -390,10 +390,14 @@
         left: 0;
         transform: none;
         border: none;
+        padding-bottom: env(safe-area-inset-bottom);
+        /* Fix safe area bottom */
     }
 
     .pop-card__top-actions {
         padding: 12px;
+        padding-top: calc(12px + env(safe-area-inset-top));
+        /* Fix safe area top */
     }
 
     .btn-back-home {

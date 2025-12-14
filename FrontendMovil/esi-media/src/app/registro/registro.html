@@ -209,6 +209,18 @@
       </div>
     </div>
 
+    <div class="gustos-block" *ngIf="esUsuarioPublico">
+      <div class="gustos-title">Mis gustos</div>
+      <small class="chips-hint">Elige qué tipo de contenido es tu favorito.</small>
+      <div class="chips-select">
+        <label class="chip-option" *ngFor="let tag of gustosDisponibles">
+          <input type="checkbox" [checked]="isGusto(tag)" (change)="toggleGusto(tag, $event.target.checked)">
+          <span>{{ tag }}</span>
+        </label>
+      </div>
+      <small class="chips-hint">Opcional: los usaremos para avisarte de nuevo contenido.</small>
+    </div>
+
     <label class="chkline" *ngIf="!esAltaCreador && !esAltaAdmin && role === 'usuario'">
       <input type="checkbox" [(ngModel)]="vip" name="vip"> ¿Quiere ser VIP?
     </label>
