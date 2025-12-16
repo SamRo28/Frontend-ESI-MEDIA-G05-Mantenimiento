@@ -164,7 +164,7 @@ export class PaginaInicialGestor implements OnInit {
     return true;
   }
   private notAllowedMsg = (contenidoTipo?: string | null) =>
-    `Tu perfil es de tipo ${this.userTipoContenido || '—'} y este contenido es ${contenidoTipo || '—'}. No puedes realizar esta acción.`;
+    `Tu perfil es de tipo ${this.userTipoContenido ?? '—'} y este contenido es ${contenidoTipo ?? '—'}. No puedes realizar esta acción.`;
 
   private withPermission(c: Contenido, action: () => void) {
     if (!this.requireTipoContenido()) return;
@@ -505,7 +505,7 @@ export class PaginaInicialGestor implements OnInit {
 
   onView(c: Contenido) {
     this.vistaContenido = c;
-    this.vistaPoster = c.imagen || null;
+    this.vistaPoster = c.imagen ?? null;
     this.listasDelContenido = (this.listasPublicas ?? [])
       .filter(lista => (lista?.contenidosIds ?? []).some(id => this.idEq(id, c.id)))
       .map(lista => lista.nombre);
@@ -647,15 +647,15 @@ export class PaginaInicialGestor implements OnInit {
     const igualActual = this.userAliasActual && aliasNuevo &&
       aliasNuevo.localeCompare(this.userAliasActual, undefined, { sensitivity: 'accent' }) === 0;
     const aliasAEnviar = igualActual ? undefined : (aliasNuevo || undefined);
-    const fotoSeleccionada = trim(this.selectedAvatar || this.foto || this.model?.foto) || undefined;
+    const fotoSeleccionada = trim(this.selectedAvatar ?? this.foto ?? this.model?.foto) ?? undefined;
     const raw: Partial<AppUser> & { foto?: string; fotoUrl?: string } = {
       email: this.userEmail,
       alias: aliasAEnviar,
-      nombre: trim(this.model?.nombre) || undefined,
-      apellidos: trim(this.model?.apellidos) || undefined,
+      nombre: trim(this.model?.nombre) ?? undefined,
+      apellidos: trim(this.model?.apellidos) ?? undefined,
       descripcion: trim(this.model?.descripcion),
-      tipoContenido: trim(this.model?.tipoContenido) || undefined,
-      especialidad: trim(this.model?.especialidad) || undefined,
+      tipoContenido: trim(this.model?.tipoContenido) ?? undefined,
+      especialidad: trim(this.model?.especialidad) ?? undefined,
       fotoUrl: fotoSeleccionada,
       foto: fotoSeleccionada
     };
@@ -664,7 +664,7 @@ export class PaginaInicialGestor implements OnInit {
         this.paintFromProfile(perfil);
         const apiAvatar = normPath(perfil?.fotoUrl ?? perfil?.foto);
         const localAvatar = normPath(fotoSeleccionada ?? this.foto ?? this.model?.foto ?? null);
-        this.userAvatarUrl = cacheBust(apiAvatar || localAvatar);
+        this.userAvatarUrl = cacheBust(apiAvatar ?? localAvatar);
         this.selectedAvatar = null;
         this.foto = apiAvatar || localAvatar || null;
         this.editOpen = false;
