@@ -135,7 +135,10 @@ export class Registro implements OnInit, OnDestroy {
   }
   get pwdStrengthLabel() {
     if (!this.showPasswordFields) return '';
-    return this.pwdScore <= 1 ? 'Débil' : this.pwdScore <= 3 ? 'Media' : 'Fuerte';
+    const score = this.pwdScore;
+    if (score <= 1) return 'Débil';
+    if (score <= 3) return 'Media';
+    return 'Fuerte';
   }
   get pwdMismatch() { return this.showPasswordFields && this.pwd2.length > 0 && this.pwd !== this.pwd2; }
 
@@ -347,11 +350,9 @@ export class Registro implements OnInit, OnDestroy {
   }
 
   private resolveRole(): RoleUi {
-    return this.esAltaAdmin
-      ? 'Administrador'
-      : this.esAltaCreador
-        ? 'Gestor de Contenido'
-        : this.role;
+    if (this.esAltaAdmin) return 'Administrador';
+    if (this.esAltaCreador) return 'Gestor de Contenido';
+    return this.role;
   }
 
   private buildPayload(): any {
@@ -401,7 +402,13 @@ export class Registro implements OnInit, OnDestroy {
     }) ?? (this.isLoading = false));
     const usuario = () => this.usersService.registrar(base).subscribe({ next: ok, error: (e) => this.handleHttpError(e) });
 
-    (this.esAltaCreador ? creador : this.esAltaAdmin ? admin : usuario)();
+    if (this.esAltaCreador) {
+      creador();
+    } else if (this.esAltaAdmin) {
+      admin();
+    } else {
+      usuario();
+    }
   }
 
 
