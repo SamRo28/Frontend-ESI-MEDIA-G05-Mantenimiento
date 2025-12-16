@@ -281,12 +281,7 @@ export class PaginaInicialAdmin implements OnInit, OnDestroy {
     if (msg) { this.errorMsg=msg; return; }
     const dto = buildUserDto(u, this.editModel);
     if (!Object.keys(dto).length) { this.cancelEdit(); return; }
-    let obs: any = null;
-    if (u.role === 'GESTOR_CONTENIDO') {
-      obs = this.api.updateCreator(u.id, dto);
-    } else if (u.role === 'USUARIO') {
-      obs = this.api.updateUser(u.id, dto);
-    }
+    const obs = u.role==='GESTOR_CONTENIDO' ? this.api.updateCreator(u.id,dto) : (u.role==='USUARIO'? this.api.updateUser(u.id,dto) : null);
     if (!obs) return;
     this.loading=true;
     obs.subscribe({
