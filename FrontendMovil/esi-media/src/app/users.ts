@@ -32,8 +32,11 @@ const ROLE_TO_API: Record<RoleUI, 'USUARIO' | 'GESTOR_CONTENIDO' | 'ADMINISTRADO
   'Gestor de Contenido': 'GESTOR_CONTENIDO',
   Administrador: 'ADMINISTRADOR',
 };
-const tipoToApi = (v?: TipoContenido): 'AUDIO' | 'VIDEO' | undefined =>
-  !v ? undefined : v.toUpperCase() === 'VIDEO' ? 'VIDEO' : 'AUDIO';
+const tipoToApi = (v?: TipoContenido): 'AUDIO' | 'VIDEO' | undefined => {
+  if (!v) return undefined;
+  if (v.toUpperCase() === 'VIDEO') return 'VIDEO';
+  return 'AUDIO';
+};
 
 const basePayload = (d: Pick<RegistroDatos, 'nombre'|'apellidos'|'email'|'alias'|'fechaNac'|'pwd'|'pwd2'|'vip'|'foto'|'role'>) => ({
   nombre: d.nombre,
