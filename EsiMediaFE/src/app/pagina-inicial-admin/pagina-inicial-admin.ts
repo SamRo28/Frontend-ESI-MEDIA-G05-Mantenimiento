@@ -25,8 +25,22 @@ const trimSafe   = (s: unknown) => (typeof s === 'string' ? s : '').trim();
 const trimLower  = (s: unknown) => trimSafe(s).toLowerCase();
 const withinLen  = (v: string, min: number, max: number) => v.length >= min && v.length <= max;
 const overMax    = (v: string, max: number) => !!v && v.length > max;
-const toDateInput= (iso?: string | null) => !iso ? '' : (iso.length > 10 ? iso.slice(0,10) : iso);
-const calcEdad   = (iso: string) => { const f=new Date(iso), h=new Date(); let e=h.getFullYear()-f.getFullYear(); const m=h.getMonth()-f.getMonth(), d=h.getDate()-f.getDate(); if (m<0||(m===0&&d<0)) e--; return {edad:e, futura:f>h}; };
+const toDateInput= (iso?: string | null) => {
+  if (!iso) return '';
+  if (iso.length > 10) return iso.slice(0,10);
+  return iso;
+};
+const calcEdad   = (iso: string) => {
+  const f = new Date(iso);
+  const h = new Date();
+  let e = h.getFullYear() - f.getFullYear();
+  const m = h.getMonth() - f.getMonth();
+  const d = h.getDate() - f.getDate();
+  if (m < 0 || (m === 0 && d < 0)) {
+    e--;
+  }
+  return { edad: e, futura: f > h };
+};
 const initials   = (name: string) => { const s=trimSafe(name); return s? s.split(/\s+/).map(p=>p[0]).join('').toUpperCase():'U'; };
 
 const fotoUrlFrom = (u: AppUser) => u.foto ? `${window.location.origin}/${u.foto}` : null;
@@ -241,7 +255,13 @@ export class PaginaInicialAdmin implements OnInit, OnDestroy {
     if (!withinLen(a,3,12)) { this.aliasError='⚠️ El alias debe tener entre 3 y 12 caracteres.'; this.aliasTaken=false; return; }
     this.aliasError=null; this.aliasChecking=true;
     this.api.checkAlias(a).subscribe({
-      next: r => { this.aliasTaken=!r.available; if (this.aliasTaken) this.aliasError='⚠️ Alias en uso'; this.aliasChecking=false; },
+      next: r => {
+        this.aliasTaken = !r.available;
+        if (this.aliasTaken) {
+          this.aliasError = '⚠️ Alias en uso';
+        }
+        this.aliasChecking = false;
+      },
       error: () => { this.aliasTaken=false; this.aliasChecking=false; }
     });
   }
@@ -261,7 +281,12 @@ export class PaginaInicialAdmin implements OnInit, OnDestroy {
     if (msg) { this.errorMsg=msg; return; }
     const dto = buildUserDto(u, this.editModel);
     if (!Object.keys(dto).length) { this.cancelEdit(); return; }
-    const obs = u.role==='GESTOR_CONTENIDO' ? this.api.updateCreator(u.id,dto) : (u.role==='USUARIO'? this.api.updateUser(u.id,dto) : null);
+    let obs: any = null;
+    if (u.role === 'GESTOR_CONTENIDO') {
+      obs = this.api.updateCreator(u.id, dto);
+    } else if (u.role === 'USUARIO') {
+      obs = this.api.updateUser(u.id, dto);
+    }
     if (!obs) return;
     this.loading=true;
     obs.subscribe({
