@@ -666,7 +666,7 @@ export class PaginaInicialGestor implements OnInit {
         const localAvatar = normPath(fotoSeleccionada ?? this.foto ?? this.model?.foto ?? null);
         this.userAvatarUrl = cacheBust(apiAvatar ?? localAvatar);
         this.selectedAvatar = null;
-        this.foto = apiAvatar || localAvatar || null;
+        this.foto = apiAvatar ?? localAvatar ?? null;
         this.editOpen = false;
         this.errorMsg = '';
         this.saving = false;

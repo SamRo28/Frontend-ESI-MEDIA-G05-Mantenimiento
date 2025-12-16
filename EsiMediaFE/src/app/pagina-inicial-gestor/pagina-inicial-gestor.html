@@ -572,11 +572,10 @@
                   <span class="arrow">▼</span>
                 </button>
 
-                <div id="tagsListboxEdit"
+                <fieldset id="tagsListboxEdit"
                     class="dropdown-content"
-                    *ngIf="dropdownOpen"
-                    role="group"
-                    aria-label="Selección de tags">
+                    *ngIf="dropdownOpen">
+                  <legend class="sr-only">Selección de tags</legend>
                   <div class="tag-category">
                     <ng-container *ngIf="userTipoContenido === 'VIDEO'">
                       <label *ngFor="let tag of availableTags.video"
@@ -591,7 +590,7 @@
                       </label>
                     </ng-container>
                   </div>
-                </div>
+                </fieldset>
               </div>
               <p class="err" *ngIf="tagsInvalid && formSubmitted">Debes seleccionar al menos un tag.</p>
 
