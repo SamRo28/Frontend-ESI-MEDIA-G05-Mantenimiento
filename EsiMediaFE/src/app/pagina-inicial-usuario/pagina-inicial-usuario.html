@@ -199,9 +199,9 @@
               </div>
 
               <div class="filter-section">
-                <label>🔞 Edad mínima</label>
+                <label for="edadMin">🔞 Edad mínima</label>
                 <div class="age-row">
-                  <select name="edadMin"
+                  <select id="edadMin" name="edadMin"
                           [(ngModel)]="filtrosContenido.ageValue"
                           (ngModelChange)="onFiltrosChange()">
                     <option [ngValue]="null">Sin filtro</option>
@@ -553,8 +553,8 @@
         </label>
       </div>
       <div class="row">
-        <label>Mis gustos</label>
-        <div class="chips-select" *ngIf="gustosDisponibles?.length; else noTags">
+        <label for="gustosSelect">Mis gustos</label>
+        <div id="gustosSelect" class="chips-select" *ngIf="gustosDisponibles?.length; else noTags">
           <label class="chip-option" *ngFor="let tag of gustosDisponibles">
             <input type="checkbox"
                    [checked]="isGusto(tag)"
