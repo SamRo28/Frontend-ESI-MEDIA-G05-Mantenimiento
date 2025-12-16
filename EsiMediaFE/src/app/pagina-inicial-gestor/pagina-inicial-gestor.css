@@ -15,7 +15,9 @@
   flex-direction: column;
   min-height: 100vh;
   width: 100%; 
-  overflow: hidden;  
+  overflow: hidden;
+  transform: none !important;
+  filter: none !important;
 }
 
 .user-photo, .user-photo-small { position: relative; overflow: hidden; }
@@ -25,7 +27,18 @@
   height: 100%; 
   object-fit: cover;
 }
-.user-photo-fallback { display: grid; place-items: center; width: 100%; height: 100%; }
+.user-photo-fallback { 
+  display: grid; 
+  place-items: center; 
+  width: 100%; 
+  height: 100%; 
+  color: #e5e5e5;
+  font-weight: 700;
+  font-size: clamp(12px, calc(var(--avatar-size) * 0.35), 18px);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.12));
+}
 
 .vip-badge { display: inline-block; min-width: 34px; text-align: center; padding: 2px 10px; border-radius: 9999px; font-size: 12px; line-height: 18px; background: #444; color: #ddd; }
 .vip-badge--on { background: #1f4; color: #041; }
@@ -505,13 +518,13 @@
 }
 
 .full-screen-wrapper{
-  margin: -10px;
-}
-
-.full-screen-wrapper,
-.page-wrapper {
+  margin: -8px;
   transform: none !important;
   filter: none !important;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #262a34 0, #14151a 45%, #0b0c10 100%);
+  color: #f1f1f1;
+  font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 
@@ -554,19 +567,6 @@
   backface-visibility: hidden;
   transform: translateZ(0); 
   border-radius: 50%;      
-}
-
-.user-photo-fallback {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  color: #e5e5e5;
-  font-weight: 700;
-  font-size: clamp(12px, calc(var(--avatar-size) * 0.35), 18px);
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.12));
 }
 
 .user-photo--error,
@@ -621,20 +621,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
-}
-
-.full-screen-wrapper {
-  min-height: 100vh;
-  background: radial-gradient(circle at top left, #262a34 0, #14151a 45%, #0b0c10 100%);
-  margin: -8px;
-  color: #f1f1f1;
-  font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
 }
 
 /* ========= TOPBAR ========= */

@@ -414,7 +414,7 @@
                         type="button"
                         (click)="toggleDropdown()"
                         [class.active]="dropdownOpen"
-                        aria-haspopup="listbox"
+                        aria-haspopup="true"
                         [attr.aria-expanded]="dropdownOpen"
                         aria-controls="tagsListboxCrear">
                   {{ tagsArray.length ? tagsArray.join(', ') : 'Selecciona tags' }}
@@ -423,9 +423,7 @@
 
                 <div id="tagsListboxCrear"
                      class="dropdown-content"
-                     *ngIf="dropdownOpen"
-                     role="listbox"
-                     aria-multiselectable="true">
+                     *ngIf="dropdownOpen">
                   <div class="tag-category">
                     <ng-container *ngIf="userTipoContenido === 'VIDEO'">
                       <label *ngFor="let tag of availableTags.video"
@@ -470,7 +468,7 @@
                         class="dropdown-btn"
                         (click)="listasDropdownOpen = !listasDropdownOpen"
                         [class.active]="listasDropdownOpen"
-                        aria-haspopup="listbox"
+                        aria-haspopup="true"
                         [attr.aria-expanded]="listasDropdownOpen"
                         aria-controls="listasListboxCrear">
                   {{ getListaNombresSeleccionadas() }}
