@@ -985,6 +985,11 @@ private applyFilter(): void {
   const modeResult = applyModeFilter(base);
   if (modeResult === null) return;
   working = modeResult;
+  if (this.filterMode === 'historial') {
+    this.filteredCon = working;
+    this.page = 1;
+    return;
+  }
 
   const f = this.filtrosContenido;
   working = applyListaFilter(working, f.listaId);
