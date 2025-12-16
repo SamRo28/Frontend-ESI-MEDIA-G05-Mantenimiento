@@ -158,7 +158,7 @@ export class PaginaInicialGestor implements OnInit {
     return true;
   }
   private notAllowedMsg = (contenidoTipo?: string | null) =>
-    `Tu perfil es de tipo ${this.userTipoContenido || '—'} y este contenido es ${contenidoTipo || '—'}. No puedes realizar esta acción.`;
+    `Tu perfil es de tipo ${this.userTipoContenido ?? '—'} y este contenido es ${contenidoTipo ?? '—'}. No puedes realizar esta acción.`;
 
   private withPermission(c: Contenido, action: () => void) {
     if (!this.requireTipoContenido()) return;
@@ -211,7 +211,7 @@ export class PaginaInicialGestor implements OnInit {
 
   private setLoggedUser(user: UserDto | null) {
     if (!user) return;
-    const nombre = trim(user.nombre) || user.email.split('@')[0];
+    const nombre = trim(user.nombre) ?? user.email.split('@')[0];
     this.userEmail = user.email;
     this.userRole = roleLabel(user.role);
     this.userTipoContenido = (user.tipoContenido ?? '') as TipoContenido | '';
@@ -221,8 +221,8 @@ export class PaginaInicialGestor implements OnInit {
     this.auth.getPerfil(this.userEmail).subscribe({
       next: (u: any) => {
         this.paintFromProfile(u);
-        this.userAvatarUrl = normalizeAvatarUrl((user as any)?.foto) || null;
-        if (!this.userAvatarUrl) this.userInitials = computeInitials(u?.alias || u?.nombre || nombre);
+        this.userAvatarUrl = normalizeAvatarUrl((user as any)?.foto) ?? null;
+        if (!this.userAvatarUrl) this.userInitials = computeInitials(u?.alias ?? u?.nombre ?? nombre);
         this.cdr.markForCheck();
       },
       error: () => { this.errorMsg = 'No se pudo cargar tu perfil'; this.cdr.markForCheck(); }
@@ -234,8 +234,8 @@ export class PaginaInicialGestor implements OnInit {
     const nombre = trim(u?.nombre);
     const apellidos = trim(u?.apellidos);
     const fullName = `${nombre} ${apellidos}`.trim();
-    this.userName = trim(u?.alias) || fullName || u?.email || this.userName;
-    this.userInitials = computeInitials(trim(u?.alias) || fullName || trim(u?.email));
+    this.userName = trim(u?.alias) ?? fullName ?? u?.email ?? this.userName;
+    this.userInitials = computeInitials(trim(u?.alias) ?? fullName ?? trim(u?.email));
     this.userAliasActual = trim(u?.alias);
     this.model = {
       nombre: u?.nombre ?? '',
@@ -270,13 +270,13 @@ export class PaginaInicialGestor implements OnInit {
     this.loadingList = true;
     this.contenidos.listar().subscribe({
       next: (list) => {
-        this.contenidosList = list || [];
+        this.contenidosList = list ?? [];
         this.loadingList = false;
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.loadingList = false;
-        const msg = err?.error?.message || err?.message || 'No se pudo cargar el listado de contenidos.';
+        const msg = err?.error?.message ?? err?.message ?? 'No se pudo cargar el listado de contenidos.';
         void showAlert('Error', msg, 'error');
         this.cdr.markForCheck();
       }
