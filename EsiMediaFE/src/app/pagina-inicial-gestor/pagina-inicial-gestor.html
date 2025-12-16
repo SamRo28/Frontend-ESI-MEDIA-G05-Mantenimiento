@@ -361,28 +361,30 @@
               </div>
 
               <div *ngIf="userTipoContenido === 'AUDIO'" class="form-row">
-                <label>Origen del audio <span class="req">*</span></label>
-                <div class="horizontal-selects" style="gap:12px; align-items:center;">
-                  <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="audioSource" value="url" [(ngModel)]="audioSource"> URL
-                  </label>
-                  <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="audioSource" value="file" [(ngModel)]="audioSource"> Fichero
-                  </label>
-                </div>
-
-                <div *ngIf="audioSource === 'url'" style="margin-top:8px;">
-                  <input id="ficheroAudio" type="text" name="ficheroAudio"
-                         [(ngModel)]="nuevo.ficheroAudio" required placeholder="https://...  o /ruta/audio.mp3" />
-                </div>
-
-                <div *ngIf="audioSource === 'file'" style="margin-top:8px;">
-                  <input id="audioFileInput" type="file" accept=".mp3,audio/mpeg,audio/mp3" (change)="onAudioFileSelected($event)" />
-                  <div *ngIf="selectedAudioFile" class="info-msg" style="margin-top:6px;">
-                    ✅ {{ selectedAudioFile.name }} — {{ (selectedAudioFile.size / 1024 / 1024).toFixed(2) }} MB
+                <fieldset style="border:0; padding:0; margin:0;">
+                  <legend id="audioSourceLegend">Origen del audio <span class="req">*</span></legend>
+                  <div class="horizontal-selects" style="gap:12px; align-items:center;" role="radiogroup" [attr.aria-labelledby]="'audioSourceLegend'">
+                    <label style="display:flex;align-items:center;gap:6px;">
+                      <input type="radio" name="audioSource" value="url" [(ngModel)]="audioSource"> URL
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;">
+                      <input type="radio" name="audioSource" value="file" [(ngModel)]="audioSource"> Fichero
+                    </label>
                   </div>
-                  <div class="err" *ngIf="fileError" style="margin-top:6px;">{{ fileError }}</div>
-                </div>
+
+                  <div *ngIf="audioSource === 'url'" style="margin-top:8px;">
+                    <input id="ficheroAudio" type="text" name="ficheroAudio"
+                           [(ngModel)]="nuevo.ficheroAudio" required placeholder="https://...  o /ruta/audio.mp3" />
+                  </div>
+
+                  <div *ngIf="audioSource === 'file'" style="margin-top:8px;">
+                    <input id="audioFileInput" type="file" accept=".mp3,audio/mpeg,audio/mp3" (change)="onAudioFileSelected($event)" />
+                    <div *ngIf="selectedAudioFile" class="info-msg" style="margin-top:6px;">
+                      ✅ {{ selectedAudioFile.name }} — {{ (selectedAudioFile.size / 1024 / 1024).toFixed(2) }} MB
+                    </div>
+                    <div class="err" *ngIf="fileError" style="margin-top:6px;">{{ fileError }}</div>
+                  </div>
+                </fieldset>
               </div>
 
               <div *ngIf="userTipoContenido === 'VIDEO'">
@@ -427,17 +429,13 @@
                   <div class="tag-category">
                     <ng-container *ngIf="userTipoContenido === 'VIDEO'">
                       <label *ngFor="let tag of availableTags.video"
-                             class="tag-option"
-                             role="option"
-                             [attr.aria-selected]="isSelected(tag)">
+                             class="tag-option">
                         <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
                     <ng-container *ngIf="userTipoContenido === 'AUDIO'">
                       <label *ngFor="let tag of availableTags.audio"
-                             class="tag-option"
-                             role="option"
-                             [attr.aria-selected]="isSelected(tag)">
+                             class="tag-option">
                         <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
@@ -472,7 +470,7 @@
                         class="dropdown-btn"
                         (click)="listasDropdownOpen = !listasDropdownOpen"
                         [class.active]="listasDropdownOpen"
-                        aria-haspopup="list"
+                        aria-haspopup="listbox"
                         [attr.aria-expanded]="listasDropdownOpen"
                         aria-controls="listasListboxCrear">
                   {{ getListaNombresSeleccionadas() }}
@@ -481,12 +479,9 @@
 
                 <div id="listasListboxCrear"
                     class="dropdown-content"
-                    *ngIf="listasDropdownOpen"
-                    role="list">
+                    *ngIf="listasDropdownOpen">
                   <label *ngFor="let lista of listasPublicas"
-                        class="tag-option"
-                        role="listitem"
-                        [attr.aria-selected]="isListaSelected(lista.id)">
+                        class="tag-option">
                     <input type="checkbox"
                           [checked]="isListaSelected(lista.id)"
                           (change)="toggleLista(lista.id)" />
@@ -587,17 +582,13 @@
                   <div class="tag-category">
                     <ng-container *ngIf="userTipoContenido === 'VIDEO'">
                       <label *ngFor="let tag of availableTags.video"
-                            class="tag-option"
-                            role="option"
-                            [attr.aria-selected]="isSelected(tag)">
+                            class="tag-option">
                         <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
                     <ng-container *ngIf="userTipoContenido === 'AUDIO'">
                       <label *ngFor="let tag of availableTags.audio"
-                            class="tag-option"
-                            role="option"
-                            [attr.aria-selected]="isSelected(tag)">
+                            class="tag-option">
                         <input type="checkbox" [checked]="isSelected(tag)" (change)="toggleTag(tag)" /> {{ tag }}
                       </label>
                     </ng-container>
@@ -641,13 +632,9 @@
 
                 <div id="listasListbox"
                     class="dropdown-content"
-                    *ngIf="listasDropdownOpen"
-                    role="listbox"
-                    aria-multiselectable="true">
+                    *ngIf="listasDropdownOpen">
                   <label *ngFor="let lista of listasPublicas"
-                        class="tag-option"
-                        role="option"
-                        [attr.aria-selected]="isListaSelected(lista.id)">
+                        class="tag-option">
                     <input type="checkbox"
                           [checked]="isListaSelected(lista.id)"
                           (change)="toggleLista(lista.id)" />
@@ -971,5 +958,3 @@
       </div>
     </dialog>
   </div>
-
-
