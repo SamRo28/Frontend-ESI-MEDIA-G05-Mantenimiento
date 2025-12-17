@@ -5,14 +5,14 @@ import {
   OnInit,
   Output
 } from '@angular/core';
-import { CommonModule, DecimalPipe, NgForOf, NgIf } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { finalize } from 'rxjs/operators';
 import { ContenidosService, RatingResumen } from '../contenidos.service';
 
 @Component({
   selector: 'app-star-rating',
   standalone: true,
-  imports: [CommonModule, NgIf, NgForOf, DecimalPipe],
+  imports: [CommonModule, DecimalPipe],
   templateUrl: './star-rating.component.html',
   styleUrls: ['./star-rating.component.css'],
 })
