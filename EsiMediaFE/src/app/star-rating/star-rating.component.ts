@@ -5,14 +5,14 @@ import {
   OnInit,
   Output
 } from '@angular/core';
-import { CommonModule, DecimalPipe, NgForOf, NgIf } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { finalize } from 'rxjs/operators';
 import { ContenidosService, RatingResumen } from '../contenidos.service';
 
 @Component({
   selector: 'app-star-rating',
   standalone: true,
-  imports: [CommonModule, NgIf, NgForOf, DecimalPipe],
+  imports: [CommonModule, DecimalPipe],
   templateUrl: './star-rating.component.html',
   styleUrls: ['./star-rating.component.css'],
 })
@@ -35,10 +35,42 @@ export class StarRatingComponent implements OnInit {
   alreadyRated = false;
   errorMsg: string | null = null;
 
-  constructor(private api: ContenidosService) {}
+  constructor(private readonly api: ContenidosService) {}
 
   ngOnInit(): void {
     this.cargarResumen();
+    this.cargarMiValor();
+  }
+
+  cargarMiValor(): void {
+    if (!this.userEmail) return;
+    try {
+      this.api.miValoracion(this.contentId, this.userEmail).subscribe({
+        next: (resp: any) => {
+          if (resp && resp.status === 200) {
+            this.userValue = resp.body ?? null;
+            if (this.userValue != null) {
+              this.alreadyRated = true;
+              this.hoverValue = null;
+            }
+          } else if (resp && resp.status === 204) {
+            this.userValue = null;
+            this.alreadyRated = false;
+          }
+        },
+        error: (err: any) => {
+          if (err?.status === 401 || err?.status === 403) {
+            this.errorMsg = 'Debes iniciar sesión para ver tu valoración';
+          } else if (err?.status === 404) {
+            this.errorMsg = 'Contenido no encontrado';
+          } else {
+            this.errorMsg = 'No se pudo cargar tu valoración';
+          }
+        }
+      });
+    } catch {
+      /* ignore */
+    }
   }
 
   cargarResumen(): void {

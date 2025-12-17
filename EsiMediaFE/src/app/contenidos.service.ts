@@ -23,7 +23,7 @@ export interface RatingResumen {
 
 @Injectable({ providedIn: 'root' })
 export class ContenidosService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly BASE = `${environment.API_BASE}/Contenidos`;
 
   private buildHeaders(opts: HeaderOpts): Record<string, string> {
@@ -175,6 +175,11 @@ export class ContenidosService {
     const scorePath = score.toFixed(1);
     const headers = new HttpHeaders({ 'X-User-Email': userEmail });
     return this.http.post<RatingResumen>(`${this.BASE}/ValorarContenido/${id}/${scorePath}`, null, { headers });
+  }
+
+  miValoracion(id: string, userEmail?: string) {
+    const headers = userEmail ? new HttpHeaders({ 'X-User-Email': userEmail }) : undefined;
+    return this.http.get<number>(`${this.BASE}/MiValoracion/${encodeURIComponent(id)}`, { headers, observe: 'response' as const });
   }
 
 }
