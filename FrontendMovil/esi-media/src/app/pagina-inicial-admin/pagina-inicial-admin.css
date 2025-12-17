@@ -335,12 +335,14 @@
   border-radius: 14px;
   border: 1px solid rgba(30,64,175,0.7);
   background: radial-gradient(circle at top left, rgba(15,23,42,0.95), rgba(15,23,42,1));
-  overflow: auto;
-  max-height: calc(100vh - 220px);
+  overflow: hidden;
   box-shadow:
     0 22px 55px rgba(0,0,0,0.95),
     0 0 0 1px rgba(15,23,42,0.9) inset;
 }
+
+
+.table-wrap { overflow:auto; max-height: calc(100vh - 220px); }
 
 
 .users-table {
