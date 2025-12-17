@@ -387,7 +387,7 @@ export class PaginaInicialUsuario implements OnInit {
   }
   eliminarAlerta(a: UserAlert, opts?: { retried?: boolean; skipConfirm?: boolean }): void {
     const email = this.resolveUserEmail();
-    if (!a || !a.id || this.readOnly || !email) return;
+    if (!a?.id || this.readOnly || !email) return;
     if (!opts?.skipConfirm && !confirm('Eliminar esta alerta?')) return;
 
     if (!opts?.retried) {
@@ -555,11 +555,14 @@ export class PaginaInicialUsuario implements OnInit {
     const fullName = `${nombre} ${apellidos}`.trim();
     this.userName = this.t(u?.alias) || fullName || u?.email || this.userName;
     this.userInitials = this.initialsFrom(this.t(u?.alias) || fullName || u?.email || '');
-    const gustosRaw = Array.isArray(u?.misGustos)
-      ? u.misGustos
-      : typeof u?.misGustos === 'string'
-        ? u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean)
-        : [];
+
+    let gustosRaw: string[] = [];
+    if (Array.isArray(u?.misGustos)) {
+      gustosRaw = u.misGustos;
+    } else if (typeof u?.misGustos === 'string') {
+      gustosRaw = u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean);
+    }
+
     const gustosFromBackend = this.canonicalizeTags(Array.isArray(gustosRaw) ? gustosRaw : []);
     const gustosFromCache = this.canonicalizeTags(this.loadGustosLocal());
     const gustosFinal = gustosFromBackend.length > 0 ? gustosFromBackend : gustosFromCache;
@@ -595,7 +598,10 @@ export class PaginaInicialUsuario implements OnInit {
   openAvatarModal() { this.showAvatarModal = true; }
   closeAvatarModal() { this.showAvatarModal = false; }
   selectAvatar(a: string) { this.selectedAvatar = a; this.foto = a; this.closeAvatarModal(); }
-  toggleEditar() { if (this.readOnly) return; requestAnimationFrame(() => { this.editOpen = !this.editOpen; this.cdr.markForCheck(); }); }
+  toggleEditar() { 
+    if (this.readOnly) return; 
+    requestAnimationFrame(() => { this.editOpen = !this.editOpen; this.cdr.markForCheck(); }); 
+  }
   toggleCrearListaPanel(): void {
   if (this.readOnly) return;
   this.showCrearListaModal = !this.showCrearListaModal;
@@ -901,18 +907,41 @@ export class PaginaInicialUsuario implements OnInit {
 
   private ratingOpen = new Set<string>();
   isRatingOpen(c: { id: string }): boolean { return !!c?.id && this.ratingOpen.has(c.id); }
-  toggleRating(c: { id: string }): void { if (!c?.id) return; this.ratingOpen.has(c.id) ? this.ratingOpen.delete(c.id) : this.ratingOpen.add(c.id); }
-  closeRating(c: { id: string }): void { if (!c?.id) return; this.ratingOpen.delete(c.id); }
+  toggleRating(c: { id: string }): void { 
+    if (!c?.id) return; 
+    if (this.ratingOpen.has(c.id)) {
+      this.ratingOpen.delete(c.id);
+    } else {
+      this.ratingOpen.add(c.id);
+    }
+  }
+  closeRating(c: { id: string }): void { 
+    if (!c?.id) return; 
+    this.ratingOpen.delete(c.id); 
+  }
   onRated(id: string, _resumen: any) { this.ratingOpen.delete(id); this.cargarContenidos(); }
   onVipChanged(v: boolean): void { this.model.vip = !!v; this.cargarContenidos(); this.cdr.markForCheck(); }
 
   private detailsOpen = new Set<string>();
   isDetailsOpen(c: { id?: string }): boolean { return !!c?.id && this.detailsOpen.has(c.id); }
-  openDetails(c: { id?: string }): void { if (!c?.id) return; this.detailsOpen.add(c.id); this.cdr.markForCheck(); }
-  closeDetails(c: { id?: string }): void { if (!c?.id) return; this.detailsOpen.delete(c.id); this.cdr.markForCheck(); }
+  openDetails(c: { id?: string }): void { 
+    if (!c?.id) return; 
+    this.detailsOpen.add(c.id); 
+    this.cdr.markForCheck(); 
+  }
+  closeDetails(c: { id?: string }): void { 
+    if (!c?.id) return; 
+    this.detailsOpen.delete(c.id); 
+    this.cdr.markForCheck(); 
+  }
 
   filterMode: 'todos' | 'favoritos' | 'historial' = 'todos';
-  onFilterChange(): void { if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos(); this.applyFilter(); }
+  onFilterChange(): void { 
+    if (this.filterMode === 'favoritos' && !this.favsLoaded) {
+      this.loadFavoritos();
+    }
+    this.applyFilter(); 
+  }
 
 private applyFilter(): void {
   const base0: Contenido[] = this.catalogBackup ?? this.contenidos.slice(0);
@@ -981,10 +1010,9 @@ private applyFilter(): void {
     });
   };
 
-  let working = base;
   const modeResult = applyModeFilter(base);
   if (modeResult === null) return;
-  working = modeResult;
+  let working = modeResult;
   if (this.filterMode === 'historial') {
     this.filteredCon = working;
     this.page = 1;
@@ -1015,7 +1043,14 @@ private applyFilter(): void {
 
     const tipoOk = !wantTipo || String(c.tipo || '').toUpperCase() === wantTipo;
 
-    const roleOk = !wantRole || (wantRole === 'VIP' ? !!c.vip : wantRole === 'STANDARD' ? !c.vip : true);
+    let roleOk = true;
+    if (wantRole) {
+      if (wantRole === 'VIP') {
+        roleOk = !!c.vip;
+      } else if (wantRole === 'STANDARD') {
+        roleOk = !c.vip;
+      }
+    }
 
     const wantCatNorm = String(wantCat ?? '').trim().toLowerCase();
     const tagsNorm = (c.tags ?? []).map(this.normalizeTag.bind(this));
@@ -1049,8 +1084,16 @@ private applyFilter(): void {
     const wantRes = String(f.resolucion ?? '').trim();
     const matchesText = (c: Contenido) => !q || [c.titulo, c.descripcion].some(v => String(v ?? '').toLowerCase().includes(q));
     const matchesTipo = (c: Contenido) => !wantTipo || String(c.tipo ?? '').toUpperCase() === wantTipo;
-    const matchesCategoria = (c: Contenido) => { if (!wantCat) return true; const tags = (c.tags ?? []).map(this.normalizeTag.bind(this)); return tags.includes(wantCat); };
-    const matchesRole = (c: Contenido) => !wantRole ? true : (wantRole === 'VIP' ? !!c.vip : !c.vip);
+    const matchesCategoria = (c: Contenido) => { 
+      if (!wantCat) return true; 
+      const tags = (c.tags ?? []).map(this.normalizeTag.bind(this)); 
+      return tags.includes(wantCat); 
+    };
+    const matchesRole = (c: Contenido) => {
+      if (!wantRole) return true;
+      if (wantRole === 'VIP') return !!c.vip;
+      return !c.vip;
+    };
     const matchesEdad = (c: Contenido) => {
       const minAge = Number(c.restringidoEdad ?? 0); const v = f.ageValue ?? null;
       if (v === null || Number(v) === 0) return true;
@@ -1076,7 +1119,10 @@ private applyFilter(): void {
         };
     }
   }
-  private matchesAgeRule(mode: AgeMode, minAge: number, x: number | null): boolean { if (!mode || x === null) return true; return mode === 'mayores' ? minAge >= x : minAge <= x; }
+  private matchesAgeRule(mode: AgeMode, minAge: number, x: number | null): boolean { 
+    if (!mode || x === null) return true; 
+    return mode === 'mayores' ? minAge >= x : minAge <= x; 
+  }
   private get isAdminReadOnly(): boolean {
     return this.readOnly && this.fromAdmin && this.isAdmin();
   }
