@@ -241,7 +241,7 @@ export class PaginaInicialAdmin implements OnInit, OnDestroy {
     if (!withinLen(a,3,12)) { this.aliasError='⚠️ El alias debe tener entre 3 y 12 caracteres.'; this.aliasTaken=false; return; }
     this.aliasError=null; this.aliasChecking=true;
     this.api.checkAlias(a).subscribe({
-      next: r => { this.aliasTaken=!r.available; if (this.aliasTaken) this.aliasError='⚠️ Alias en uso'; this.aliasChecking=false; },
+    next: r => { this.aliasTaken=!r.available; if (this.aliasTaken) this.aliasError='⚠️ Alias en uso'; this.aliasChecking=false; },
       error: () => { this.aliasTaken=false; this.aliasChecking=false; }
     });
   }

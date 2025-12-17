@@ -159,7 +159,7 @@ export class PaginaInicialGestor implements OnInit {
   }
   private notAllowedMsg = (contenidoTipo?: string | null) =>
     `Tu perfil es de tipo ${this.userTipoContenido || '—'} y este contenido es ${contenidoTipo || '—'}. No puedes realizar esta acción.`;
-
+  
   private withPermission(c: Contenido, action: () => void) {
     if (!this.requireTipoContenido()) return;
     if (!this.canManage(c)) {
@@ -276,7 +276,7 @@ export class PaginaInicialGestor implements OnInit {
       },
       error: (err) => {
         this.loadingList = false;
-        const msg = err?.error?.message || err?.message || 'No se pudo cargar el listado de contenidos.';
+        const msg = err?.error?.message || err?.message || 'No se pudo cargar el listado de contenidos.';        
         void showAlert('Error', msg, 'error');
         this.cdr.markForCheck();
       }

@@ -341,7 +341,9 @@
     0 0 0 1px rgba(15,23,42,0.9) inset;
 }
 
+
 .table-wrap { overflow:auto; max-height: calc(100vh - 220px); }
+
 
 .users-table {
   table-layout: auto;

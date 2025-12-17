@@ -401,7 +401,7 @@ export class Registro implements OnInit, OnDestroy {
     }) ?? (this.isLoading = false));
     const usuario = () => this.usersService.registrar(base).subscribe({ next: ok, error: (e) => this.handleHttpError(e) });
 
-    (this.esAltaCreador ? creador : this.esAltaAdmin ? admin : usuario)();
+   (this.esAltaCreador ? creador : this.esAltaAdmin ? admin : usuario)();
   }
 
 
