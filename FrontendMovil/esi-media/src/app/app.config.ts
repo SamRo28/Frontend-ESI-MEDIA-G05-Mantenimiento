@@ -2,8 +2,9 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChang
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
+import { environment } from './environments/environment';
 
-export const API_BASE_URL = 'http://localhost:8081';
+export const API_BASE_URL = `${environment.USERS_API_BASE}`;
 
 export const appConfig: ApplicationConfig = {
   providers: [

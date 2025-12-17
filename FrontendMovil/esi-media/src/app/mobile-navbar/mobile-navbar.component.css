@@ -1,0 +1,84 @@
+:host {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    /* Ensure it's above everything */
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    /* iOS safe area */
+}
+
+.mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    min-height: 60px;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: content-box; /* Ensure padding adds to height if needed, or stick to border-box and let min-height handle it. Let's stick to standard behavior but ensure height grows. */
+    height: auto;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    transition: color 0.2s ease;
+}
+
+.nav-item .icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.icon-with-badge {
+    position: relative;
+}
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item.active,
+.nav-item:active {
+    color: #38bdf8;
+    /* Highlight color for active state */
+}
+
+.nav-item:hover {
+    color: #e2e8f0;
+}
+
+/* Hide on desktop */
+@media (min-width: 901px) {
+    :host {
+        display: none;
+    }
+}

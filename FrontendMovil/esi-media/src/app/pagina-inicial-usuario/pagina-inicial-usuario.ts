@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, ElementRef, ViewChild } from '@angular/core'; 
+import { ChangeDetectorRef, Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,6 +11,17 @@ import { firstValueFrom, Observable, forkJoin, of } from 'rxjs';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { FavoritesService } from '../favorites.service';
+import { environment } from '../environments/environment';
+import { ContentDetailsModalComponent } from '../modals/content-details-modal/content-details-modal.component';
+import { EditProfileModalComponent } from '../modals/edit-profile-modal/edit-profile-modal.component';
+import { AvatarSelectorModalComponent } from '../modals/avatar-selector-modal/avatar-selector-modal.component';
+import { MediaPlayerModalComponent } from '../modals/media-player-modal/media-player-modal.component';
+import { CreateListModalComponent } from '../modals/create-list-modal/create-list-modal.component';
+import { MobileNavbarComponent } from '../mobile-navbar/mobile-navbar.component';
+import { ListasPublicasService, ListaPublica } from '../listas-publicas.service';
+import { AlertsModalComponent } from '../modals/alerts-modal/alerts-modal.component';
+import { AlertasService, UserAlert } from '../alertas.service';
+import { TAGS_ALL, TAGS_AUDIO, TAGS_VIDEO } from '../tags.constants';
 
 type RolContenidoFiltro = '' | 'VIP' | 'STANDARD';
 type OrdenContenido = 'fecha' | 'titulo' | 'reproducciones';
@@ -58,23 +69,22 @@ function isDirectMedia(url: string): boolean {
   const l = url.toLowerCase();
   return l.endsWith('.mp4') || l.endsWith('.webm') || l.endsWith('.ogg') || l.endsWith('.m3u8');
 }
-interface ListaPublica {
-  id: string;
-  nombre: string;
-  descripcion?: string;
-  publica?: boolean;
-  emailUsuario?: string;
-  userEmail?: string;
-  contenidosIds?: any[];
-  contenidos?: string[]; 
-}
-
-
 
 @Component({
   selector: 'app-pagina-inicial-usuario',
   standalone: true,
-  imports: [CommonModule, FormsModule, StarRatingComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    StarRatingComponent,
+    ContentDetailsModalComponent,
+    EditProfileModalComponent,
+    AvatarSelectorModalComponent,
+    MediaPlayerModalComponent,
+    CreateListModalComponent,
+    MobileNavbarComponent,
+    AlertsModalComponent
+  ],
   templateUrl: './pagina-inicial-usuario.html',
   styleUrls: ['./pagina-inicial-usuario.css'],
 })
@@ -86,20 +96,33 @@ export class PaginaInicialUsuario implements OnInit {
   filteredCon: Contenido[] = [];
   listasPublicas: ListaPublica[] = [];
 
-  misListas: ListaPublica[] = [];           
+  misListas: ListaPublica[] = [];
   nuevaListaNombre = '';
   nuevaListaDescripcion = '';
-  nuevaListaPublica = false;                 
+  nuevaListaPublica = false;
   creatingList = false;
   crearListaError: string | null = null;
   crearListaOk: string | null = null;
   showCrearListaModal = false;
-  // añadir: contenido para crear lista desde pop-card
-  contenidoParaLista: Contenido | null = null;
 
+  showFilters = false;
+  toggleFilters() {
+    if (this.editOpen) return;
+    this.showFilters = !this.showFilters;
+    this.cdr.markForCheck();
+  }
+  closeFilters() {
+    this.showFilters = false;
+    this.cdr.markForCheck();
+  }
 
+  // Alertas
+  alertas: UserAlert[] = [];
+  alertasLoading = false;
+  alertasError: string | null = null;
+  showAlertas = false;
+  get alertCount(): number { return this.alertas?.length || 0; }
 
-  
   pageSize = 12;
   page = 1;
   get totalPages(): number { return Math.max(1, Math.ceil(this.filteredCon.length / this.pageSize)); }
@@ -130,17 +153,21 @@ export class PaginaInicialUsuario implements OnInit {
   resolucionesDisponibles: string[] = [];
   onFiltrosChange(): void { this.applyFilter(); this.cdr.markForCheck(); }
   resetFiltros(): void {
-    this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageMode: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc',listaId: '' };
+    this.filtrosContenido = { q: '', tipo: '', categoria: '', role: '', ageMode: '', ageValue: null, resolucion: '', ordenar: 'fecha', dir: 'desc', listaId: '' };
     this.applyFilter();
   }
 
-  private readonly CONTENIDOS_BASE = 'http://localhost:8082/Contenidos';
-  private readonly LISTAS_BASE = 'http://localhost:8082/listas';
+  private readonly CONTENIDOS_BASE = `${environment.API_BASE}/Contenidos`;
+  private readonly LISTAS_BASE = `${environment.API_BASE}/listas`;
 
   private favIds = new Set<string>();
   favsLoaded = false;
   pendingToggle: Record<string, boolean> = {};
   private onlyFavsView = false;
+
+  // History
+  private historyIds = new Set<string>();
+  historyLoaded = false;
 
   playerOpen = false;
   playerSrc: string | null = null;
@@ -152,8 +179,8 @@ export class PaginaInicialUsuario implements OnInit {
   msgListaError: Record<string, string> = {};
 
 
-  @ViewChild('videoEl') videoRef?: ElementRef<HTMLVideoElement>; 
-  @ViewChild('audioEl') audioRef?: ElementRef<HTMLAudioElement>; 
+  @ViewChild('videoEl') videoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('audioEl') audioRef?: ElementRef<HTMLAudioElement>;
   iframeKey = 0;
 
   playingId: string | null = null;
@@ -166,7 +193,7 @@ export class PaginaInicialUsuario implements OnInit {
   foto: string | null = null;
   selectedAvatar: string | null = null;
   showAvatarModal = false;
-  
+
 
   userName = '';
   userEmail = '';
@@ -186,7 +213,10 @@ export class PaginaInicialUsuario implements OnInit {
   aliasChecking = false;
   aliasTaken = false;
 
-  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; }> = {};
+  gustosDisponibles: string[] = [];
+  gustosSeleccionados: string[] = [];
+
+  model: Partial<{ nombre: string; apellidos: string; alias: string; fechaNac: string; foto: string; vip: boolean; misGustos: string[] }> = {};
   private readonly MAX = { nombre: 100, apellidos: 100, alias: 12 };
   private readonly ALIAS_MIN = 3;
 
@@ -231,6 +261,39 @@ export class PaginaInicialUsuario implements OnInit {
     return s.slice(0, 10);
   }
 
+  // --- Taste Tags Helpers ---
+  private canonicalizeTags(tags: string[]): string[] {
+    return Array.from(new Set(tags.map(t => this.normalizeTasteTag(t)).filter(Boolean)));
+  }
+  private normalizeTasteTag(t: string): string {
+    return (t || '').trim();
+  }
+  private loadGustosLocal(): string[] {
+    try {
+      const raw = localStorage.getItem(`user_gustos_${this.userEmail}`);
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch { return []; }
+  }
+  private persistGustosLocal() {
+    if (!this.userEmail) return;
+    localStorage.setItem(`user_gustos_${this.userEmail}`, JSON.stringify(this.gustosSeleccionados));
+  }
+  private syncGustosBackendIfMissing(fromBackend: string[], fromCache: string[]) {
+    // Si backend viene vacío, pero tengo local => enviar local al backend
+    // Esto es "auto-reparación" silenciosa.
+    if (fromBackend.length === 0 && fromCache.length > 0 && !this.readOnly) {
+      this.gustosSeleccionados = fromCache;
+      // Podríamos disparar guardarCambios(), pero es arriesgado hacerlo automático sin pedir confirmación.
+      // Mejor lo dejamos en UI. Si el usuario abre perfil, verá sus gustos locales. Al guardar, se suben.
+    }
+  }
+  private syncGustosDisponibles() {
+    this.gustosDisponibles = TAGS_ALL.slice();
+    // Podríamos filtrar solo AUDIO/VIDEO según tiposDisponibles, 
+    // pero TAGS_ALL ya cubre todo.
+  }
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -239,7 +302,9 @@ export class PaginaInicialUsuario implements OnInit {
     private readonly http: HttpClient,
     private readonly s: DomSanitizer,
     private contenidosSvc: ContenidosService,
-    private favs: FavoritesService
+    private favs: FavoritesService,
+    private listasService: ListasPublicasService,
+    private alertasSvc: AlertasService
   ) { }
 
   private readonly DEFAULT_TIPOS = ['AUDIO', 'VIDEO'];
@@ -257,9 +322,141 @@ export class PaginaInicialUsuario implements OnInit {
     this.bootstrapUser();
     this.cargarContenidos();
     this.cargarListasPublicas();
+    this.syncGustosDisponibles();
   }
 
-  
+  cargarListasPublicas() {
+    this.listasService.listarListas().subscribe({
+      next: (listas) => {
+        this.listasPublicas = listas || [];
+        // Filter my lists (assuming userEmail matches)
+        if (this.userEmail) {
+          this.misListas = this.listasPublicas.filter(l => l.userEmail === this.userEmail || l.emailUsuario === this.userEmail);
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Error cargando listas', err)
+    });
+  }
+
+  openCrearListaModal() {
+    this.showCrearListaModal = true;
+    this.crearListaError = null;
+    this.crearListaOk = null;
+    this.nuevaListaNombre = '';
+    this.nuevaListaDescripcion = '';
+    this.cdr.markForCheck();
+  }
+
+  closeCrearListaModal() {
+    this.showCrearListaModal = false;
+    this.cdr.markForCheck();
+  }
+
+  crearLista() {
+    if (!this.nuevaListaNombre.trim()) {
+      this.crearListaError = 'El nombre es obligatorio';
+      return;
+    }
+    this.creatingList = true;
+    this.crearListaError = null;
+
+    const nueva = {
+      nombre: this.nuevaListaNombre,
+      descripcion: this.nuevaListaDescripcion,
+      userEmail: this.userEmail,
+      contenidosIds: [],
+      publica: this.nuevaListaPublica
+    };
+
+    this.listasService.crearLista(nueva).subscribe({
+      next: (res) => {
+        this.creatingList = false;
+        this.crearListaOk = 'Lista creada correctamente';
+        this.cargarListasPublicas();
+        setTimeout(() => this.closeCrearListaModal(), 1500);
+      },
+      error: (err) => {
+        this.creatingList = false;
+        this.crearListaError = err?.error?.message || 'Error al crear la lista';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  anadirContenidoALista(contenido: Contenido, listaId: string) {
+    if (!listaId || !contenido?.id) return;
+
+    this.creandoListaContenido[contenido.id] = true;
+    this.msgListaOk[contenido.id] = '';
+    this.msgListaError[contenido.id] = '';
+    this.cdr.markForCheck();
+
+    this.listasService.añadirContenido(listaId, contenido.id).subscribe({
+      next: () => {
+        this.creandoListaContenido[contenido.id] = false;
+        this.msgListaOk[contenido.id] = 'Añadido correctamente';
+        setTimeout(() => {
+          this.msgListaOk[contenido.id] = '';
+          this.cdr.markForCheck();
+        }, 3000);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.creandoListaContenido[contenido.id] = false;
+        this.msgListaError[contenido.id] = 'Error al añadir';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onAliasChange(alias: string) {
+    if (!this.model) this.model = {};
+    this.model.alias = alias;
+  }
+
+  // Métodos de alertas
+  cargarAlertas(): void {
+    if (!this.userEmail) return;
+    this.alertasLoading = true;
+    this.alertasError = null;
+    this.alertasSvc.listar(this.userEmail).subscribe({
+      next: (arr) => {
+        this.alertas = arr || [];
+        this.alertasLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (e) => {
+        this.alertasLoading = false;
+        this.alertasError = e?.error?.message || e?.message || 'No se pudieron cargar las alertas';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  toggleAlertasPanel(): void {
+    this.showAlertas = !this.showAlertas;
+    if (this.showAlertas) {
+      this.cargarAlertas();
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeAlertasPanel(): void {
+    this.showAlertas = false;
+    this.cdr.markForCheck();
+  }
+
+  onAlertDeleted(alertId: string): void {
+    this.alertas = this.alertas.filter(a => a.id !== alertId);
+    this.cdr.markForCheck();
+  }
+
+  onReloadAlertas(): void {
+    this.cargarAlertas();
+  }
+
+
   private apiListFavIds(): Observable<string[]> { return this.favs.loadFavoritosIds(); }
   private apiAddFav(id: string): Observable<any> { return this.favs.addFavorito(id); }
   private apiRemoveFav(id: string): Observable<any> { return this.favs.removeFavorito(id); }
@@ -292,6 +489,46 @@ export class PaginaInicialUsuario implements OnInit {
       this.pendingToggle[id] = false;
       this.cdr.markForCheck();
     }
+  }
+
+
+  loadHistory(): void {
+    if (!this.userEmail) return;
+    try {
+      const key = `user_history_${this.userEmail}`;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          this.historyIds = new Set(arr);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading history', e);
+    }
+    this.historyLoaded = true;
+    this.cdr.markForCheck();
+  }
+
+  pushToHistory(c: Contenido): void {
+    if (!this.userEmail || !c?.id) return;
+    try {
+      const key = `user_history_${this.userEmail}`;
+      let arr: string[] = [];
+      const raw = localStorage.getItem(key);
+      if (raw) arr = JSON.parse(raw);
+
+      // Remove to avoid dupes, add to front
+      arr = arr.filter(x => x !== c.id);
+      arr.unshift(c.id);
+
+      // Limit size
+      if (arr.length > 50) arr = arr.slice(0, 50);
+
+      localStorage.setItem(key, JSON.stringify(arr));
+      this.historyIds = new Set(arr);
+      this.cdr.markForCheck();
+    } catch (e) { console.error('Error pushing history', e); }
   }
 
   private computeReadOnlyFlags(): void {
@@ -353,7 +590,31 @@ export class PaginaInicialUsuario implements OnInit {
     const fullName = `${nombre} ${apellidos}`.trim();
     this.userName = this.t(u?.alias) || fullName || u?.email || this.userName;
     this.userInitials = this.initialsFrom(this.t(u?.alias) || fullName || u?.email || '');
-    this.model = { nombre: u?.nombre ?? '', apellidos: u?.apellidos ?? '', alias: u?.alias ?? '', fechaNac: this.formatISODate(u?.fechaNac), foto: u?.foto ?? u?.fotoUrl ?? '', vip: !!u?.vip };
+
+    // Gustos
+    const gustosRaw = Array.isArray(u?.misGustos)
+      ? u.misGustos
+      : typeof u?.misGustos === 'string'
+        ? u.misGustos.split(',').map((x: string) => x.trim()).filter(Boolean)
+        : [];
+    const gustosFromBackend = this.canonicalizeTags(Array.isArray(gustosRaw) ? gustosRaw : []);
+    const gustosFromCache = this.canonicalizeTags(this.loadGustosLocal());
+    const gustosFinal = gustosFromBackend.length > 0 ? gustosFromBackend : gustosFromCache;
+
+    this.model = {
+      nombre: u?.nombre ?? '',
+      apellidos: u?.apellidos ?? '',
+      alias: u?.alias ?? '',
+      fechaNac: this.formatISODate(u?.fechaNac),
+      foto: u?.foto ?? u?.fotoUrl ?? '',
+      vip: !!u?.vip,
+      misGustos: gustosFinal
+    };
+    this.gustosSeleccionados = gustosFinal
+      .map((g: string) => this.normalizeTag(g))
+      .filter(Boolean);
+    this.persistGustosLocal();
+    this.syncGustosBackendIfMissing(gustosFromBackend, gustosFromCache);
   }
   salirModoLectura(): void { localStorage.removeItem('users_readonly_mode'); localStorage.removeItem('users_readonly_from_admin'); this.router.navigateByUrl('/admin'); }
   CerrarSesion(): void {
@@ -380,13 +641,49 @@ export class PaginaInicialUsuario implements OnInit {
   openAvatarModal() { this.showAvatarModal = true; }
   closeAvatarModal() { this.showAvatarModal = false; }
   selectAvatar(a: string) { this.selectedAvatar = a; this.foto = a; this.closeAvatarModal(); }
+  onProfileClicked() {
+    Swal.fire({
+      title: 'Opciones de perfil',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'Editar Perfil',
+      denyButtonText: 'Cerrar Sesión',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      denyButtonColor: '#d33',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.toggleEditar();
+      } else if (result.isDenied) {
+        this.CerrarSesion();
+      }
+    });
+  }
+
+  onViewChange(view: string) {
+    if (this.editOpen) {
+      this.editOpen = false;
+      this.cdr.markForCheck();
+    }
+    if (view === 'inicio') view = 'todos';
+
+    // Cast to literal type to satisfy TS if needed, logic remains valid
+    const validModes = ['todos', 'favoritos', 'historial'];
+    if (validModes.includes(view)) {
+      this.filterMode = view as 'todos' | 'favoritos' | 'historial';
+      this.onFilterChange();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.cdr.detectChanges(); // Force update
+    }
+  }
+
   toggleEditar() { if (this.readOnly) return; requestAnimationFrame(() => { this.editOpen = !this.editOpen; this.cdr.markForCheck(); }); }
   toggleCrearListaPanel(): void {
-  if (this.readOnly) return;
-  this.showCrearListaModal = !this.showCrearListaModal;
-  this.crearListaError = null;
-  this.crearListaOk = null;
-}
+    if (this.readOnly) return;
+    this.showCrearListaModal = !this.showCrearListaModal;
+    this.crearListaError = null;
+    this.crearListaOk = null;
+  }
 
   cancelarEditar() { this.editOpen = false; this.cdr.markForCheck(); }
   handleKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') this.closeAvatarModal(); }
@@ -408,7 +705,8 @@ export class PaginaInicialUsuario implements OnInit {
         email: this.userEmail, alias: aliasAEnviar, nombre: this.t(this.model?.nombre) || undefined, apellidos: this.t(this.model?.apellidos) || undefined,
         fechaNac: this.model?.fechaNac ? String(this.model.fechaNac).slice(0, 10) : undefined,
         vip: typeof this.model?.vip === 'boolean' ? this.model.vip : undefined,
-        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada
+        fotoUrl: fotoSeleccionada, foto: fotoSeleccionada,
+        misGustos: this.model.misGustos // Se actualiza via modal
       };
       const payload = this.cleanPayload(raw);
       this.auth.putPerfil(payload).subscribe({
@@ -421,13 +719,15 @@ export class PaginaInicialUsuario implements OnInit {
     this.paintFromProfile(perfil);
     this.editOpen = false; this.okMsg = 'Se ha editado correctamente'; this.errorMsg = ''; this.saving = false;
     if (this.selectedAvatar) this.userAvatar = this.selectedAvatar;
+    this.gustosSeleccionados = this.model.misGustos || [];
+    this.persistGustosLocal();
     this.cargarContenidos();
     void Swal.fire({ icon: 'success', title: 'Se ha editado correctamente', timer: 1500, showConfirmButton: false });
     this.cdr.markForCheck();
   }
   private failSave(msg: string) { this.saving = false; this.errorMsg = msg; this.cdr.markForCheck(); }
   private computeFotoToSend(): string | undefined { return this.t(this.selectedAvatar || this.foto || this.model?.foto) || undefined; }
-    private async computeAliasToSend(): Promise<string | undefined> {
+  private async computeAliasToSend(): Promise<string | undefined> {
     const aliasNuevo = this.t(this.model?.alias);
     if (!aliasNuevo) return undefined;
     const noCambio =
@@ -598,7 +898,7 @@ export class PaginaInicialUsuario implements OnInit {
     }
   }
 
-  
+
   private handleExternalPlay(url: string, content: any, isUsuario: boolean): void {
     const ytembed = toYouTubeEmbed(url);
     const vimbed = toVimeoEmbed(url);
@@ -634,20 +934,26 @@ export class PaginaInicialUsuario implements OnInit {
     this.playerOpen = true;
     this.openedInternally = true;
     this.openedExternally = false;
-    if (isUsuario) this.incrementViews(content);
+    if (isUsuario) {
+      this.incrementViews(content);
+      this.pushToHistory(content);
+    }
     this.cdr.markForCheck();
   }
 
-  
+
   private handleInternalPlay(blobUrl: string, content: any, isUsuario: boolean): void {
     this.playerKind = String(content.tipo).toUpperCase() === 'AUDIO' ? 'AUDIO' : 'VIDEO';
     this.playerSrc = blobUrl;
-    this.embedUrl = null; 
+    this.embedUrl = null;
     this.playingId = content.id;
     this.playingTitle = content.titulo || null;
     this.playerOpen = true;
     this.openedInternally = true;
-    if (isUsuario) this.incrementViews(content);
+    if (isUsuario) {
+      this.incrementViews(content);
+      this.pushToHistory(content);
+    }
     this.cdr.markForCheck();
   }
 
@@ -655,7 +961,7 @@ export class PaginaInicialUsuario implements OnInit {
   private incrementViews(content: any): void { content.reproducciones = this.toNum(content.reproducciones) + 1; }
 
   closePlayer() {
-    
+
     const v = this.videoRef?.nativeElement;
     if (v) {
       try { v.pause(); } catch { }
@@ -668,7 +974,7 @@ export class PaginaInicialUsuario implements OnInit {
       try { a.removeAttribute('src'); a.load(); } catch { }
     }
     this.embedUrl = null;
-    this.iframeKey++; 
+    this.iframeKey++;
 
     try { if (this.playerSrc?.startsWith('blob:')) URL.revokeObjectURL(this.playerSrc); } catch { }
 
@@ -687,96 +993,115 @@ export class PaginaInicialUsuario implements OnInit {
   onRated(id: string, _resumen: any) { this.ratingOpen.delete(id); this.cargarContenidos(); }
   onVipChanged(v: boolean): void { this.model.vip = !!v; this.cargarContenidos(); this.cdr.markForCheck(); }
 
-  private detailsOpen = new Set<string>();
-  isDetailsOpen(c: { id?: string }): boolean { return !!c?.id && this.detailsOpen.has(c.id); }
-  openDetails(c: { id?: string }): void { if (!c?.id) return; this.detailsOpen.add(c.id); this.cdr.markForCheck(); }
-  closeDetails(c: { id?: string }): void { if (!c?.id) return; this.detailsOpen.delete(c.id); this.cdr.markForCheck(); }
+  selectedContent: Contenido | null = null;
+  isDetailsModalOpen = false;
+
+  openDetails(c: Contenido): void {
+    this.selectedContent = c;
+    this.isDetailsModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closeDetails(): void {
+    this.isDetailsModalOpen = false;
+    setTimeout(() => {
+      this.selectedContent = null;
+      this.cdr.markForCheck();
+    }, 300); // Wait for animation if any
+  }
 
   filterMode: 'todos' | 'favoritos' | 'historial' = 'todos';
-  onFilterChange(): void { if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos(); this.applyFilter(); }
+  onFilterChange(): void {
+    if (this.filterMode === 'favoritos' && !this.favsLoaded) this.loadFavoritos();
+    if (this.filterMode === 'historial') this.loadHistory();
+    this.applyFilter();
+  }
 
-private applyFilter(): void {
-  const base0: Contenido[] = this.catalogBackup ?? this.contenidos.slice(0);
+  private applyFilter(): void {
+    const base0: Contenido[] = this.catalogBackup ?? this.contenidos.slice(0);
 
-  const base = base0
-    .filter(item => this.canSeeVip() ? true : !item.vip)
-    .filter(item => this.canSeeByAge(item));
-  const applyModeFilter = (src: Contenido[]): Contenido[] | null => {
-    if (this.filterMode === 'favoritos') {
-      if (!this.favsLoaded) {
-        this.filteredCon = src.slice(0);
-        this.page = 1;
-        return null; 
+    const base = base0
+      .filter(item => this.canSeeVip() ? true : !item.vip)
+      .filter(item => this.canSeeByAge(item));
+    const applyModeFilter = (src: Contenido[]): Contenido[] | null => {
+      if (this.filterMode === 'favoritos') {
+        if (!this.favsLoaded) {
+          // While loading favorites, avoid showing "Todos". Show empty or keep current.
+          // Better to return empty so user knows it's filtering.
+          this.filteredCon = [];
+          this.page = 1;
+          return null;
+        }
+        const favSet = this.favIds;
+        return src.filter(c => favSet.has(c.id));
+      } else if (this.filterMode === 'historial') {
+        if (!this.historyLoaded) this.loadHistory();
+        return src.filter(c => this.historyIds.has(c.id));
       }
-      const favSet = this.favIds;
-      return src.filter(c => favSet.has(c.id));
-    } else if (this.filterMode === 'historial') {
-      return src.filter(c => (c.reproducciones ?? 0) > 0);
-    }
-    return src;
-  };
-  
+      return src;
+    };
 
-  const applyListaFilter = (src: Contenido[], listaIdRaw: string): Contenido[] => {
-    const listaId = String(listaIdRaw || '').trim();
-    if (!listaId) return src;
-    const lista = this.listasPublicas.find(l => String(l.id) === listaId);
-    const idsLista = new Set<string>();
-    if (lista) {
-      if (Array.isArray(lista.contenidosIds)) {
-        lista.contenidosIds.forEach((x: any) => idsLista.add(String(x)));
-      }
-      if (Array.isArray(lista.contenidos)) {
-        lista.contenidos.forEach((x: any) => idsLista.add(String(x?.id ?? x)));
-      }
-    }
-    return idsLista.size > 0 ? src.filter(c => idsLista.has(String(c.id))) : [];
-  };
 
-  const buildParams = (f: any) => ({
-    q: String(f.q ?? '').trim().toLowerCase(),
-    wantTipo: String(f.tipo ?? '').trim().toUpperCase(),
-    wantCat: this.normalizeTag(f.categoria),
-    wantRole: (f.role || '').toUpperCase(),
-    wantRes: String(f.resolucion ?? '').trim(),
-    ageMode: f.ageMode,
-    ageVal: f.ageValue
-  });
-
-  const sortResults = (arr: Contenido[], f: any) => {
-    const dir = f.dir === 'asc' ? 1 : -1;
-    const ordenar = f.ordenar;
-    arr.sort((a, b) => {
-      let score = 0;
-      if (ordenar === 'fecha') {
-        const ta = a.fechaEstado ? new Date(a.fechaEstado).getTime() : 0;
-        const tb = b.fechaEstado ? new Date(b.fechaEstado).getTime() : 0;
-        score = tb - ta;
-      } else if (ordenar === 'titulo') {
-        score = String(a.titulo || '').localeCompare(String(b.titulo || ''));
-      } else if (ordenar === 'reproducciones') {
-        score = (b.reproducciones || 0) - (a.reproducciones || 0);
+    const applyListaFilter = (src: Contenido[], listaIdRaw: string): Contenido[] => {
+      const listaId = String(listaIdRaw || '').trim();
+      if (!listaId) return src;
+      const lista = this.listasPublicas.find(l => String(l.id) === listaId);
+      const idsLista = new Set<string>();
+      if (lista) {
+        if (Array.isArray(lista.contenidosIds)) {
+          lista.contenidosIds.forEach((x: any) => idsLista.add(String(x)));
+        }
+        if (Array.isArray(lista.contenidos)) {
+          lista.contenidos.forEach((x: any) => idsLista.add(String(x?.id ?? x)));
+        }
       }
-      return score * dir;
+      return idsLista.size > 0 ? src.filter(c => idsLista.has(String(c.id))) : [];
+    };
+
+    const buildParams = (f: any) => ({
+      q: String(f.q ?? '').trim().toLowerCase(),
+      wantTipo: String(f.tipo ?? '').trim().toUpperCase(),
+      wantCat: this.normalizeTag(f.categoria),
+      wantRole: (f.role || '').toUpperCase(),
+      wantRes: String(f.resolucion ?? '').trim(),
+      ageMode: f.ageMode,
+      ageVal: f.ageValue
     });
-  };
 
-  let working = base;
-  const modeResult = applyModeFilter(base);
-  if (modeResult === null) return;
-  working = modeResult;
+    const sortResults = (arr: Contenido[], f: any) => {
+      const dir = f.dir === 'asc' ? 1 : -1;
+      const ordenar = f.ordenar;
+      arr.sort((a, b) => {
+        let score = 0;
+        if (ordenar === 'fecha') {
+          const ta = a.fechaEstado ? new Date(a.fechaEstado).getTime() : 0;
+          const tb = b.fechaEstado ? new Date(b.fechaEstado).getTime() : 0;
+          score = tb - ta;
+        } else if (ordenar === 'titulo') {
+          score = String(a.titulo || '').localeCompare(String(b.titulo || ''));
+        } else if (ordenar === 'reproducciones') {
+          score = (b.reproducciones || 0) - (a.reproducciones || 0);
+        }
+        return score * dir;
+      });
+    };
 
-  const f = this.filtrosContenido;
-  working = applyListaFilter(working, f.listaId);
+    let working = base;
+    const modeResult = applyModeFilter(base);
+    if (modeResult === null) return;
+    working = modeResult;
 
-  const params = buildParams(f);
-  const out = working.filter(c => this.matchesFilter(c, params));
+    const f = this.filtrosContenido;
+    working = applyListaFilter(working, f.listaId);
 
-  sortResults(out, f);
+    const params = buildParams(f);
+    const out = working.filter(c => this.matchesFilter(c, params));
 
-  this.filteredCon = out;
-  this.page = 1;
-}
+    sortResults(out, f);
+
+    this.filteredCon = out;
+    this.page = 1;
+  }
 
 
   private matchesFilter(
@@ -849,37 +1174,7 @@ private applyFilter(): void {
   private get isAdminReadOnly(): boolean {
     return this.readOnly && this.fromAdmin && this.isAdmin();
   }
-private cargarListasPublicas(): void {
-  const email = (this.userEmail || '').trim();
 
-  const obsPublicas = this.http.get<ListaPublica[]>(`${this.LISTAS_BASE}/publicas`);
-  const obsMias = email
-    ? this.http.get<ListaPublica[]>(`${this.LISTAS_BASE}/usuario/${encodeURIComponent(email)}`)
-    : of<ListaPublica[]>([]);
-
-  forkJoin([obsPublicas, obsMias]).subscribe({
-    next: ([publicas, mias]) => {
-      this.misListas = mias || [];
-
-      const map = new Map<string, ListaPublica>();
-      for (const l of publicas || []) {
-        if (l.id) map.set(l.id, l);
-      }
-      for (const l of mias || []) {
-        if (l.id) map.set(l.id, l); 
-      }
-
-      this.listasPublicas = Array.from(map.values());
-      this.cdr.markForCheck();
-    },
-    error: (err) => {
-      console.error('Error al cargar listas', err);
-      this.listasPublicas = [];
-      this.misListas = [];
-      this.cdr.markForCheck();
-    }
-  });
-}
   public canPlay(): boolean {
     return !this.isAdminReadOnly;
   }
@@ -887,6 +1182,7 @@ private cargarListasPublicas(): void {
   private getCurrentAge(): number | null {
     return this.calcAgeFromISO(this.model?.fechaNac || null);
   }
+
   private canSeeByAge(item: { restringidoEdad?: number | null }): boolean {
     if (this.readOnly && this.fromAdmin && this.isAdmin()) return true;
     const min = this.toNum(item?.restringidoEdad ?? 0);
@@ -895,160 +1191,6 @@ private cargarListasPublicas(): void {
     if (age === null) return false;
     return age >= min;
   }
-    onAliasChange(v: string) {
-    const alias = this.t(v);
-    this.model.alias = alias;
-    this.aliasError = null;
-    this.aliasTaken = false;
 
-    if (!alias) {
-      return;
-    }
-
-    if (alias.length < this.ALIAS_MIN || alias.length > this.MAX.alias) {
-      this.aliasError = `El alias debe tener entre ${this.ALIAS_MIN} y ${this.MAX.alias} caracteres.`;
-      return;
-    }
-    const noCambio =
-      this.userAliasActual &&
-      alias &&
-      alias.localeCompare(this.userAliasActual, undefined, {
-        sensitivity: 'accent'
-      }) === 0;
-
-    if (noCambio) {
-      return;
-    }
-
-    this.aliasChecking = true;
-    this.auth.checkAlias(alias).subscribe({
-      next: (res: { available: boolean }) => {
-        this.aliasChecking = false;
-        this.aliasTaken = !res?.available;
-        if (this.aliasTaken) {
-          this.aliasError = 'El alias ya está en uso. Elige otro.';
-        }
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.aliasChecking = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  crearLista(): void {
-  if (this.readOnly) return;
-
-  const nombre = (this.nuevaListaNombre || '').trim();
-  const descripcion = (this.nuevaListaDescripcion || '').trim();
-
-  this.crearListaError = null;
-  this.crearListaOk = null;
-
-  if (!this.userEmail) {
-    this.crearListaError = 'No se ha podido determinar tu usuario. Vuelve a iniciar sesión.';
-    return;
-  }
-
-  if (!nombre) {
-    this.crearListaError = 'El nombre de la lista es obligatorio.';
-    return;
-  }
-
-  // modificar: incluir contenido inicial si existe
-  const contenidosIds = this.contenidoParaLista?.id ? [this.contenidoParaLista.id] : [];
-
-  const payload: Partial<ListaPublica> = {
-    nombre,
-    descripcion,
-    userEmail: this.userEmail,
-    publica: false,                
-    contenidosIds
-  };
-
-  this.creatingList = true;
-
-  this.http.post<ListaPublica>(this.LISTAS_BASE, payload).subscribe({
-    next: (lista) => {
-      this.creatingList = false;
-      this.misListas.push(lista);
-
-      const existe = this.listasPublicas.some(l => l.id === lista.id);
-      if (!existe) this.listasPublicas.push(lista);
-
-      this.nuevaListaNombre = '';
-      this.nuevaListaDescripcion = '';
-
-      this.crearListaOk = 'Lista creada correctamente.';
-
-      this.showCrearListaModal = false;
-      this.contenidoParaLista = null;
-
-      this.cdr.markForCheck();
-    },
-    error: (err) => {
-      this.creatingList = false;
-      this.crearListaError = err?.error?.message || err?.message || 'No se pudo crear la lista.';
-      this.cdr.markForCheck();
-    }
-  });
-}
-anadirContenidoALista(c: Contenido): void {
-  if (!c?.id || this.readOnly) return;
-
-  const listaId = this.selectedListaPorContenido[c.id];
-  if (!listaId) return;
-
-  this.msgListaOk[c.id] = '';
-  this.msgListaError[c.id] = '';
-  this.creandoListaContenido[c.id] = true;
-  const url = `${this.LISTAS_BASE}/${encodeURIComponent(listaId)}/contenidos/${encodeURIComponent(c.id)}`;
-
-  this.http.post<ListaPublica>(url, {}).subscribe({
-    next: (listaActualizada) => {
-      this.creandoListaContenido[c.id] = false;
-      this.msgListaOk[c.id] = 'Contenido añadido a la lista.';
-      this.msgListaError[c.id] = '';
-
-      const ix = this.listasPublicas.findIndex(l => l.id === listaActualizada.id);
-      if (ix >= 0) this.listasPublicas[ix] = listaActualizada;
-
-      const ix2 = this.misListas.findIndex(l => l.id === listaActualizada.id);
-      if (ix2 >= 0) this.misListas[ix2] = listaActualizada;
-
-      this.cdr.markForCheck();
-    },
-    error: (err) => {
-      this.creandoListaContenido[c.id] = false;
-      this.msgListaError[c.id] =
-        err?.error?.message || err?.message || 'No se pudo añadir a la lista.';
-      this.msgListaOk[c.id] = '';
-      this.cdr.markForCheck();
-    }
-  });
-}
-
-openCrearListaModal(): void {
-  if (this.readOnly) return;
-  this.nuevaListaNombre = '';
-  this.nuevaListaDescripcion = '';
-  this.crearListaError = null;
-  this.crearListaOk = null;
-  this.showCrearListaModal = true;
-}
-
-closeCrearListaModal(): void {
-  this.showCrearListaModal = false;
-  this.contenidoParaLista = null;
-}
-
-// añadir: abrir crear lista desde pop-card de contenido
-abrirCrearListaDesdeContenido(c: Contenido): void {
-  if (this.readOnly || !c) return;
-  this.contenidoParaLista = c;
-  this.detailsOpen.delete(c.id!); // cerrar pop-card
-  this.openCrearListaModal();
-}
 
 }

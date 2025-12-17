@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { StatsResponse } from './stats';
+import { environment } from './environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class StatsService {
-  private baseUrl = 'http://localhost:8082/Contenidos';
+  private baseUrl = `${environment.API_BASE}/Contenidos`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getTops(roleHeader: string): Observable<StatsResponse> {
     const headers = new HttpHeaders({ 'X-User-Role': roleHeader });

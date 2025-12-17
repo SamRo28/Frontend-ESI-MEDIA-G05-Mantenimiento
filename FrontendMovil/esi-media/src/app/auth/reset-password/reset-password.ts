@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-reset-password',
@@ -56,7 +57,7 @@ export class ResetPassword {
     }
 
     this.cargando = true;
-    this.http.post('http://localhost:8081/users/reset-password', {
+    this.http.post(`${environment.USERS_API_BASE}/users/reset-password`, {
       token: this.token,
       newPassword: this.pwd
     }).subscribe({
@@ -73,54 +74,54 @@ export class ResetPassword {
   }
 
   private async sha1Hex(text: string): Promise<string> {
-  const data = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-  const bytes = new Uint8Array(hashBuffer);
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-}
+    const data = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const bytes = new Uint8Array(hashBuffer);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
 
-private async checkPasswordPwned(password: string): Promise<number> {
-  if (!password) return 0;
+  private async checkPasswordPwned(password: string): Promise<number> {
+    if (!password) return 0;
 
-  const fullHash = await this.sha1Hex(password);
-  const prefix = fullHash.slice(0, 5);
-  const suffix = fullHash.slice(5);
-  const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
-    headers: { 'Add-Padding': 'true' }
-  });
+    const fullHash = await this.sha1Hex(password);
+    const prefix = fullHash.slice(0, 5);
+    const suffix = fullHash.slice(5);
+    const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      headers: { 'Add-Padding': 'true' }
+    });
 
-  if (!res.ok) throw new Error('Fallo consultando diccionario online');
-  const text = await res.text();
+    if (!res.ok) throw new Error('Fallo consultando diccionario online');
+    const text = await res.text();
 
-  const lines = text.split('\n');
-  for (const line of lines) {
-    const [hashSuffix, countStr] = line.trim().split(':');
-    if (hashSuffix?.toUpperCase() === suffix) {
-      const count = parseInt((countStr || '0').replace(/\D/g, ''), 10) || 0;
-      return count;
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const [hashSuffix, countStr] = line.trim().split(':');
+      if (hashSuffix?.toUpperCase() === suffix) {
+        const count = parseInt((countStr || '0').replace(/\D/g, ''), 10) || 0;
+        return count;
+      }
+    }
+    return 0;
+  }
+
+  private async ensurePwnedChecked(): Promise<void> {
+    if (!this.pwd) return;
+    this.cargando = true;
+    try {
+      const count = await this.checkPasswordPwned(this.pwd);
+      if (count > 0) {
+        Swal.fire({
+          title: 'Contraseña insegura',
+          html: `Esta contraseña aparece en filtraciones públicas <b>${count}</b> veces.<br>Por favor, elige otra distinta.`,
+          icon: 'error',
+          confirmButtonText: 'Cambiar contraseña'
+        });
+        throw new Error('Contraseña comprometida');
+      }
+    } finally {
+      this.cargando = false;
     }
   }
-  return 0;
-}
-
-private async ensurePwnedChecked(): Promise<void> {
-  if (!this.pwd) return;
-  this.cargando = true;
-  try {
-    const count = await this.checkPasswordPwned(this.pwd);
-    if (count > 0) {
-      Swal.fire({
-        title: 'Contraseña insegura',
-        html: `Esta contraseña aparece en filtraciones públicas <b>${count}</b> veces.<br>Por favor, elige otra distinta.`,
-        icon: 'error',
-        confirmButtonText: 'Cambiar contraseña'
-      });
-      throw new Error('Contraseña comprometida');
-    }
-  } finally {
-    this.cargando = false;
-  }
-}
 
 
 }

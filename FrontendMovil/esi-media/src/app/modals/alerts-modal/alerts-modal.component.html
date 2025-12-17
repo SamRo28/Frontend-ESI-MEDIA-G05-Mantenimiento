@@ -1,0 +1,76 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="icon">📬</span>
+        Buzón de Alertas
+      </h2>
+      <button class="btn-close" (click)="closeModal()" aria-label="Cerrar">
+        <span class="close-icon">✕</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Estado de carga -->
+      <div *ngIf="loading" class="state-container">
+        <div class="spinner"></div>
+        <p class="state-text">Cargando alertas...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="!loading && error" class="state-container error">
+        <span class="error-icon">⚠️</span>
+        <p class="state-text">{{ error }}</p>
+        <button class="btn-retry" (click)="reloadAlertas()">Reintentar</button>
+      </div>
+
+      <!-- Sin alertas -->
+      <div *ngIf="!loading && !error && (!alertas || alertas.length === 0)" class="state-container empty">
+        <span class="empty-icon">📭</span>
+        <p class="state-text">No tienes alertas pendientes</p>
+      </div>
+
+      <!-- Lista de alertas -->
+      <div *ngIf="!loading && !error && alertas?.length" class="alerts-list">
+        <div *ngFor="let alerta of alertas" class="alert-card">
+          <div class="alert-header">
+            <span class="alert-badge" [class.badge-new]="alerta.type === 'NEW_CONTENT'" 
+                  [class.badge-expiring]="alerta.type === 'CONTENT_EXPIRING'"
+                  [class.badge-interest]="alerta.type === 'CONTENT_MATCHES_INTERESTS'">
+              {{ getAlertTypeLabel(alerta.type) }}
+            </span>
+            <span class="alert-date" *ngIf="alerta.creadaEn">
+              {{ alerta.creadaEn | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+
+          <div class="alert-body">
+            <h3 class="alert-title">{{ alerta.tituloContenido || alerta.type || 'Alerta' }}</h3>
+            <p class="alert-message" *ngIf="alerta.mensaje">{{ alerta.mensaje }}</p>
+            
+            <div class="alert-meta" *ngIf="alerta.disponibleHasta || alerta.vipOnly || alerta.minEdad">
+              <span *ngIf="alerta.disponibleHasta" class="meta-item">
+                ⏰ Expira: {{ alerta.disponibleHasta | date:'dd/MM/yyyy' }}
+              </span>
+              <span *ngIf="alerta.vipOnly" class="meta-item">
+                👑 Solo VIP
+              </span>
+              <span *ngIf="alerta.minEdad" class="meta-item">
+                🔞 {{ alerta.minEdad }}+
+              </span>
+            </div>
+          </div>
+
+          <div class="alert-actions">
+            <button 
+              class="btn-delete" 
+              (click)="eliminarAlerta(alerta)"
+              [disabled]="alertasEliminando[alerta.id!]">
+              {{ alertasEliminando[alerta.id!] ? 'Eliminando...' : 'Eliminar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

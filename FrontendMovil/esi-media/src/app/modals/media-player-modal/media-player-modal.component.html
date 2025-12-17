@@ -1,0 +1,36 @@
+<button type="button" class="player-overlay" (click)="onClose()" aria-label="Cerrar reproductor">
+</button>
+
+<div class="player-modal" (click)="$event.stopPropagation()" (keydown)="handleKeyDown($event)">
+    <div class="player-header">
+        <h3 class="player-title">{{ playingTitle }}</h3>
+        <button class="player-close" (click)="onClose()" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 17.59 13.41 12z" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="player-body">
+        <ng-container [ngSwitch]="playerKind">
+            <video *ngSwitchCase="'VIDEO'" #videoEl [src]="playerSrc || undefined" controls autoplay
+                class="player-video">
+                <track src="subtitles.vtt" kind="subtitles" srclang="en" label="English">
+                <track src="descriptions.vtt" kind="descriptions" srclang="en" label="English Descriptions">
+            </video>
+
+            <audio *ngSwitchCase="'AUDIO'" #audioEl [src]="playerSrc || undefined" controls autoplay
+                class="player-audio">
+            </audio>
+
+            <iframe *ngSwitchCase="'EMBED'" [src]="embedUrl || null" title="Reproductor externo"
+                allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen class="player-iframe">
+            </iframe>
+        </ng-container>
+    </div>
+
+    <div class="player-footer">
+        <button type="button" class="btn-out" (click)="onClose()">Cerrar</button>
+    </div>
+</div>

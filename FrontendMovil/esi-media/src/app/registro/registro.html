@@ -2,77 +2,63 @@
   <h2>{{ esAltaAdmin ? 'Nuevo Administrador' : (esAltaCreador ? 'Nuevo Creador' : 'Crear Cuenta') }}</h2>
 
   <div class="info-banner" *ngIf="esAltaCreador">
-    <p>Alta realizada por <b>Administrador</b>. El rol queda fijado a <span class="chip-role">Gestor de Contenido</span>. No se requieren fecha de nacimiento ni aceptación de términos.</p>
+    <p>Alta realizada por <b>Administrador</b>. El rol queda fijado a <span class="chip-role">Gestor de
+        Contenido</span>. No se requieren fecha de nacimiento ni aceptación de términos.</p>
   </div>
   <div class="info-banner info-banner--admin" *ngIf="esAltaAdmin">
-    <p>Alta de <b>Administrador</b>. El rol queda fijado a <span class="chip-role chip-role--admin">Administrador</span>. No se requieren fecha de nacimiento, aceptación de términos ni contraseña.</p>
+    <p>Alta de <b>Administrador</b>. El rol queda fijado a <span
+        class="chip-role chip-role--admin">Administrador</span>. No se requieren fecha de nacimiento, aceptación de
+      términos ni contraseña.</p>
   </div>
 
   <form #f="ngForm" (ngSubmit)="onSubmit(f)">
     <div class="field">
-      <input class="input"
-             name="nombre"
-             [(ngModel)]="nombre"
-             required
-             maxlength="100"
-             #nombreModel="ngModel"
-             (ngModelChange)="0"
-             [ngClass]="{ 'input-error': nombreModel.invalid && (nombreModel.dirty || nombreModel.touched), 'input-valid': nombreModel.valid && (nombreModel.dirty || nombreModel.touched) }"
-             placeholder="Nombre *">
+      <input class="input" name="nombre" [(ngModel)]="nombre" required maxlength="100" #nombreModel="ngModel"
+        (ngModelChange)="0"
+        [ngClass]="{ 'input-error': nombreModel.invalid && (nombreModel.dirty || nombreModel.touched), 'input-valid': nombreModel.valid && (nombreModel.dirty || nombreModel.touched) }"
+        placeholder="Nombre *">
       <div class="row-hints">
-        <small class="error-msg" *ngIf="nombreModel.invalid && (nombreModel.dirty || nombreModel.touched)">Falta el nombre</small>
+        <small class="error-msg" *ngIf="nombreModel.invalid && (nombreModel.dirty || nombreModel.touched)">Falta el
+          nombre</small>
       </div>
     </div>
 
     <div class="field">
-      <input class="input"
-             name="apellidos"
-             [(ngModel)]="apellidos"
-             required
-             maxlength="120"
-             #apellidosModel="ngModel"
-             (ngModelChange)="0"
-             [ngClass]="{ 'input-error': apellidosModel.invalid && (apellidosModel.dirty || apellidosModel.touched), 'input-valid': apellidosModel.valid && (apellidosModel.dirty || apellidosModel.touched) }"
-             placeholder="Apellidos *">
+      <input class="input" name="apellidos" [(ngModel)]="apellidos" required maxlength="120" #apellidosModel="ngModel"
+        (ngModelChange)="0"
+        [ngClass]="{ 'input-error': apellidosModel.invalid && (apellidosModel.dirty || apellidosModel.touched), 'input-valid': apellidosModel.valid && (apellidosModel.dirty || apellidosModel.touched) }"
+        placeholder="Apellidos *">
       <div class="row-hints">
-        <small class="error-msg" *ngIf="apellidosModel.invalid && (apellidosModel.dirty || apellidosModel.touched)">Faltan los apellidos</small>
+        <small class="error-msg"
+          *ngIf="apellidosModel.invalid && (apellidosModel.dirty || apellidosModel.touched)">Faltan los
+          apellidos</small>
       </div>
     </div>
 
     <div class="alias-row">
-      <input class="input"
-             type="email"
-             name="email"
-             [(ngModel)]="email"
-             required
-             maxlength="120"
-             [pattern]="emailPattern.source"
-             #emailModel="ngModel"
-             (ngModelChange)="onEmailChange()"
-            [ngClass]="{ 'input-error': (emailModel.invalid && (emailModel.dirty || emailModel.touched)) || emailPatternError || emailUnique === false,'input-valid': emailModel.valid && (emailModel.dirty || emailModel.touched) && emailUnique !== false}"
-             placeholder="Email *">
+      <input class="input" type="email" name="email" [(ngModel)]="email" required maxlength="120"
+        [pattern]="emailPattern.source" #emailModel="ngModel" (ngModelChange)="onEmailChange()"
+        [ngClass]="{ 'input-error': (emailModel.invalid && (emailModel.dirty || emailModel.touched)) || emailPatternError || emailUnique === false,'input-valid': emailModel.valid && (emailModel.dirty || emailModel.touched) && emailUnique !== false}"
+        placeholder="Email *">
     </div>
     <div class="row-hints">
-      <small class="error-msg" *ngIf="!isCheckingEmail && email && emailUnique === false">Pruebe Otro correo electrónico</small>
-      <small class="error-msg" *ngIf="emailModel.errors?.['required'] && (emailModel.dirty || emailModel.touched)">Falta el email</small>
+      <small class="error-msg" *ngIf="!isCheckingEmail && email && emailUnique === false">Pruebe Otro correo
+        electrónico</small>
+      <small class="error-msg" *ngIf="emailModel.errors?.['required'] && (emailModel.dirty || emailModel.touched)">Falta
+        el email</small>
       <small class="error-msg" *ngIf="emailPatternError">{{ emailPatternError }}</small>
     </div>
 
     <div class="alias-row" *ngIf="!esAltaAdmin">
-      <input class="input"
-             name="alias"
-             (blur)="aliasTouched = true"
-             [(ngModel)]="alias"
-             
-             maxlength="12"
-             #aliasModel="ngModel"
-             (ngModelChange)="onAliasChange()"
-             [ngClass]="{ 'input-valid': !!alias && aliasUnique === true && !aliasLenError, 'input-error': (!!alias && aliasUnique === false) || (!!alias && aliasLenError) || (!!aliasRequiredError) }"
-             placeholder="{{ isGestor ? 'Alias * (único, obligatorio para Gestor)' : 'Alias (opcional, máx 12)' }}">
+      <input class="input" name="alias" (blur)="aliasTouched = true" [(ngModel)]="alias" maxlength="12"
+        #aliasModel="ngModel" (ngModelChange)="onAliasChange()"
+        [ngClass]="{ 'input-valid': !!alias && aliasUnique === true && !aliasLenError, 'input-error': (!!alias && aliasUnique === false) || (!!alias && aliasLenError) || (!!aliasRequiredError) }"
+        placeholder="{{ isGestor ? 'Alias * (único, obligatorio para Gestor)' : 'Alias (opcional, máx 12)' }}">
       <div class="alias-status">
         <span class="spinner" *ngIf="isCheckingAlias"></span>
-        <span *ngIf="!isCheckingAlias && !!alias && aliasUnique === true && !aliasLenError" class="chip-ok">Disponible</span>
-        
+        <span *ngIf="!isCheckingAlias && !!alias && aliasUnique === true && !aliasLenError"
+          class="chip-ok">Disponible</span>
+
       </div>
     </div>
     <div class="row-hints" *ngIf="!esAltaAdmin">
@@ -82,102 +68,71 @@
     </div>
 
     <div class="fila-fecha" *ngIf="!esAltaCreador && !esAltaAdmin && role !== 'Gestor de Contenido' ">
-      <input class="input"
-             type="date"
-             name="fechaNac"
-             [(ngModel)]="fechaNac"
-             required
-             #fechaModel="ngModel"
-             (ngModelChange)="0"
-             [ngClass]="{ 'input-error': (fechaModel.invalid && (fechaModel.dirty || fechaModel.touched)) || fechaInvalida || isUnder4, 'input-valid': fechaModel.valid && !fechaInvalida && !isUnder4 }"
-             placeholder="Fecha de nacimiento *">
+      <label class="input-label" for="fechaNac">Fecha de nacimiento *</label>
+      <input id="fechaNac" class="input" type="date" name="fechaNac" [(ngModel)]="fechaNac" required
+        #fechaModel="ngModel" (ngModelChange)="0"
+        [ngClass]="{ 'input-error': (fechaModel.invalid && (fechaModel.dirty || fechaModel.touched)) || fechaInvalida || isUnder4, 'input-valid': fechaModel.valid && !fechaInvalida && !isUnder4 }">
       <div class="row-hints">
-        <small class="error-msg" *ngIf="fechaModel.errors?.['required'] && (fechaModel.dirty || fechaModel.touched)">Falta la fecha</small>
+        <small class="error-msg"
+          *ngIf="fechaModel.errors?.['required'] && (fechaModel.dirty || fechaModel.touched)">Falta la fecha</small>
         <small class="error-msg" *ngIf="fechaInvalida">La fecha no puede ser futura</small>
         <small class="error-msg" *ngIf="isUnder4">No se permiten usuarios menores de 4 años</small>
       </div>
     </div>
 
-    <ng-container *ngIf="!esAltaCreador && !esAltaAdmin">
-      <select class="input role-select"
-              name="role"
-              [(ngModel)]="role"
-              required
-              #roleModel="ngModel"
-              (ngModelChange)="onRoleChange($event)"
-              [disabled]="roleDisabled"
-              [ngClass]="{ 'input-error': roleModel.invalid && (roleModel.dirty || roleModel.touched), 'input-valid': roleModel.valid && (roleModel.dirty || roleModel.touched) }">
-        <option value="" disabled selected>Selecciona un rol *</option>
-        <option value="usuario">Usuario</option>
-        <option value="Gestor de Contenido">Gestor de Contenido</option>
-      </select>
-      <small class="error-msg" *ngIf="roleModel.invalid && (roleModel.dirty || roleModel.touched)">Selecciona un rol</small>
-    </ng-container>
-
     <div class="role-chip-row" *ngIf="esAltaCreador"><span class="chip-role">Rol: Gestor de Contenido</span></div>
-    <div class="role-chip-row" *ngIf="esAltaAdmin"><span class="chip-role chip-role--admin">Rol: Administrador</span></div>
+    <div class="role-chip-row" *ngIf="esAltaAdmin"><span class="chip-role chip-role--admin">Rol: Administrador</span>
+    </div>
 
     <div *ngIf="isGestor" class="gestor-extra">
-      <textarea class="input"
-                name="descripcion"
-                [(ngModel)]="descripcion"
-                maxlength="500"
-                placeholder="Descripción (opcional)"></textarea>
+      <textarea class="input" name="descripcion" [(ngModel)]="descripcion" maxlength="500"
+        placeholder="Descripción (opcional)"></textarea>
       <div class="row-hints">
       </div>
 
-     <select
-      class="input"
-      name="especialidad"
-      [(ngModel)]="especialidad"
-      (blur)="especialidadTouched = true"
-      #especialidadModel="ngModel"
-      required
-    >
-      <option value="" disabled selected>Selecciona una especialidad *</option>
+      <select class="input" name="especialidad" [(ngModel)]="especialidad" (blur)="especialidadTouched = true"
+        #especialidadModel="ngModel" required>
+        <option value="" disabled selected>Selecciona una especialidad *</option>
 
-      <ng-container *ngIf="tipoContenido === 'Video'">
-        <option value="tutoriales">Tutoriales</option>
-        <option value="vlogs">Vlogs</option>
-        <option value="entretenimiento">Entretenimiento</option>
-        <option value="educacion">Educación</option>
-        <option value="documentales">Documentales</option>
-        <option value="reviews">Reviews</option>
-      </ng-container>
+        <ng-container *ngIf="tipoContenido === 'Video'">
+          <option value="tutoriales">Tutoriales</option>
+          <option value="vlogs">Vlogs</option>
+          <option value="entretenimiento">Entretenimiento</option>
+          <option value="educacion">Educación</option>
+          <option value="documentales">Documentales</option>
+          <option value="reviews">Reviews</option>
+        </ng-container>
 
-      <ng-container *ngIf="tipoContenido === 'Audio'">
-        <option value="comedia">Comedia</option>
-        <option value="podcast">Podcast</option>
-        <option value="humor">Humor</option>
-        <option value="entrevistas">Entrevistas</option>
-        <option value="musical">Musical</option>
-      </ng-container>
-    </select>
+        <ng-container *ngIf="tipoContenido === 'Audio'">
+          <option value="comedia">Comedia</option>
+          <option value="podcast">Podcast</option>
+          <option value="humor">Humor</option>
+          <option value="entrevistas">Entrevistas</option>
+          <option value="musical">Musical</option>
+        </ng-container>
+      </select>
 
-    <div class="row-hints">
-      <small class="error-msg" *ngIf="especialidadError">{{ especialidadError }}</small>
-    </div>
+      <div class="row-hints">
+        <small class="error-msg" *ngIf="especialidadError">{{ especialidadError }}</small>
+      </div>
       <div class="tipo-row">
         <label class="tipo-label" for="tipoContenido">Tipo de contenido *</label>
         <label class="tipo-chip">
-          <input id="tipoContenido" (blur)="tipoContenidoTouched = true" type="radio" name="tipoContenido" [(ngModel)]="tipoContenido" [value]="'Audio'" #tipoModel="ngModel"> Audio
+          <input id="tipoContenido" (blur)="tipoContenidoTouched = true" type="radio" name="tipoContenido"
+            [(ngModel)]="tipoContenido" [value]="'Audio'" #tipoModel="ngModel"> Audio
         </label>
         <label class="tipo-chip">
-          <input type="radio" name="tipoContenido" (blur)="tipoContenidoTouched = true" [(ngModel)]="tipoContenido" [value]="'Video'" #tipoModel="ngModel"> Video
+          <input type="radio" name="tipoContenido" (blur)="tipoContenidoTouched = true" [(ngModel)]="tipoContenido"
+            [value]="'Video'" #tipoModel="ngModel"> Video
         </label>
       </div>
       <small class="error-msg" *ngIf="tipoContenidoError">{{ tipoContenidoError }}</small>
     </div>
 
     <div class="field" *ngIf="esAltaAdmin">
-      <input class="input"
-             name="departamento"
-             [(ngModel)]="departamento"
-             required
-             maxlength="120"
-             placeholder="Departamento * (p. ej. Sistemas / Dirección TI)"
-             #depModel="ngModel"
-             [ngClass]="{ 'input-error': depModel.invalid && (depModel.dirty || depModel.touched) || deptoError, 'input-valid': depModel.valid && !deptoError }">
+      <input class="input" name="departamento" [(ngModel)]="departamento" required maxlength="120"
+        placeholder="Departamento * (p. ej. Sistemas / Dirección TI)" #depModel="ngModel"
+        [ngClass]="{ 'input-error': depModel.invalid && (depModel.dirty || depModel.touched) || deptoError, 'input-valid': depModel.valid && !deptoError }">
       <div class="row-hints">
         <small class="error-msg" *ngIf="deptoError">{{ deptoError }}</small>
       </div>
@@ -185,17 +140,21 @@
 
     <ng-container *ngIf="showPasswordFields">
       <div class="password-field">
-        <input class="input"
-               [type]="showPwd ? 'text' : 'password'"
-               name="pwd"
-               [(ngModel)]="pwd"
-               required
-               minlength="8"
-               #pwdModel="ngModel"
-               (ngModelChange)="onPwdChange()"
-               [ngClass]="{ 'input-error': (pwdModel.invalid && (pwdModel.dirty || pwdModel.touched)) || ((pwdModel.dirty || pwdModel.touched) && pwdIssues.length>0), 'input-valid': pwdModel.valid && pwdIssues.length==0 }"
-               placeholder="Contraseña *">
-        <button type="button" class="toggle-eye" (click)="togglePwd()">{{ showPwd ? '🙈' : '👁️' }}</button>
+        <input class="input" [type]="showPwd ? 'text' : 'password'" name="pwd" [(ngModel)]="pwd" required minlength="8"
+          #pwdModel="ngModel" (ngModelChange)="onPwdChange()"
+          [ngClass]="{ 'input-error': (pwdModel.invalid && (pwdModel.dirty || pwdModel.touched)) || ((pwdModel.dirty || pwdModel.touched) && pwdIssues.length>0), 'input-valid': pwdModel.valid && pwdIssues.length==0 }"
+          placeholder="Contraseña *">
+        <button type="button" class="toggle-eye" (click)="togglePwd()"
+          [attr.aria-label]="showPwd ? 'Ocultar contraseña' : 'Ver contraseña'">
+          <svg *ngIf="!showPwd" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path
+              d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+          </svg>
+          <svg *ngIf="showPwd" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path
+              d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+          </svg>
+        </button>
       </div>
 
       <ul class="error-list" *ngIf="(pwdModel.dirty || pwdModel.touched) && pwdIssues.length">
@@ -203,28 +162,36 @@
       </ul>
 
       <div class="strength-wrapper" *ngIf="pwdModel.dirty || pwd">
-        <div class="strength-bar" [ngClass]="{ 's1': pwdScore <= 1, 's2': pwdScore === 2, 's3': pwdScore === 3, 's4': pwdScore >= 4 }"></div>
+        <div class="strength-bar"
+          [ngClass]="{ 's1': pwdScore <= 1, 's2': pwdScore === 2, 's3': pwdScore === 3, 's4': pwdScore >= 4 }"></div>
         <div class="strength-label">Fortaleza: <b>{{ pwdStrengthLabel }}</b></div>
       </div>
 
       <div class="strength-label" aria-live="polite" *ngIf="hasPwd">
         <span class="spinner" *ngIf="isCheckingPwned"></span>
         <small *ngIf="!isCheckingPwned && pwnedSeverity==='warn'" class="error-msg" [innerHTML]="pwnedMessage"></small>
-        <small *ngIf="!isCheckingPwned && pwnedSeverity==='ok'" style="color:#00ff80" [innerHTML]="pwnedMessage"></small>
-        <small *ngIf="!isCheckingPwned && pwnedSeverity==='unknown' && pwnedMessage" style="color:rgba(255,255,255,0.8)">{{ pwnedMessage }}</small>
+        <small *ngIf="!isCheckingPwned && pwnedSeverity==='ok'" style="color:#00ff80"
+          [innerHTML]="pwnedMessage"></small>
+        <small *ngIf="!isCheckingPwned && pwnedSeverity==='unknown' && pwnedMessage"
+          style="color:rgba(255,255,255,0.8)">{{ pwnedMessage }}</small>
       </div>
 
       <div class="password-field">
-        <input class="input"
-               [type]="showPwd2 ? 'text' : 'password'"
-               name="pwd2"
-               [(ngModel)]="pwd2"
-               required
-               #pwd2Model="ngModel"
-               (ngModelChange)="0"
-               [ngClass]="{ 'input-error': (pwd2Model.invalid && (pwd2Model.dirty || pwd2Model.touched)) || ((pwd2Model.dirty || pwd2Model.touched) && pwdMismatch), 'input-valid': pwd2Model.valid && !pwdMismatch }"
-               placeholder="Repetir Contraseña *">
-        <button type="button" class="toggle-eye" (click)="togglePwd2()">{{ showPwd2 ? '🙈' : '👁️' }}</button>
+        <input class="input" [type]="showPwd2 ? 'text' : 'password'" name="pwd2" [(ngModel)]="pwd2" required
+          #pwd2Model="ngModel" (ngModelChange)="0"
+          [ngClass]="{ 'input-error': (pwd2Model.invalid && (pwd2Model.dirty || pwd2Model.touched)) || ((pwd2Model.dirty || pwd2Model.touched) && pwdMismatch), 'input-valid': pwd2Model.valid && !pwdMismatch }"
+          placeholder="Repetir Contraseña *">
+        <button type="button" class="toggle-eye" (click)="togglePwd2()"
+          [attr.aria-label]="showPwd2 ? 'Ocultar contraseña' : 'Ver contraseña'">
+          <svg *ngIf="!showPwd2" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path
+              d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+          </svg>
+          <svg *ngIf="showPwd2" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path
+              d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+          </svg>
+        </button>
       </div>
       <small class="error-msg" *ngIf="pwdMismatch">Las contraseñas no coinciden</small>
     </ng-container>
@@ -242,15 +209,24 @@
       </div>
     </div>
 
+    <div class="gustos-block" *ngIf="esUsuarioPublico">
+      <div class="gustos-title">Mis gustos</div>
+      <small class="chips-hint">Elige qué tipo de contenido es tu favorito.</small>
+      <div class="chips-select">
+        <label class="chip-option" *ngFor="let tag of gustosDisponibles">
+          <input type="checkbox" [checked]="isGusto(tag)" (change)="toggleGusto(tag, $event.target.checked)">
+          <span>{{ tag }}</span>
+        </label>
+      </div>
+      <small class="chips-hint">Opcional: los usaremos para avisarte de nuevo contenido.</small>
+    </div>
+
     <label class="chkline" *ngIf="!esAltaCreador && !esAltaAdmin && role === 'usuario'">
       <input type="checkbox" [(ngModel)]="vip" name="vip"> ¿Quiere ser VIP?
     </label>
 
     <div class="mfa-modal" *ngIf="showMfaModal">
-      <button
-        type="button"
-        class="mfa-modal__overlay"
-        (click)="cancelMfaSelection()"
+      <button type="button" class="mfa-modal__overlay" (click)="cancelMfaSelection()"
         aria-label="Cerrar selector de segundo factor">
       </button>
 
@@ -295,11 +271,14 @@
   </form>
 </div>
 
-<div *ngIf="showAvatarModal" class="avatar-modal" (click)="closeAvatarModal()" (keydown.enter)="closeAvatarModal()" (keydown.space)="closeAvatarModal()" (keydown.escape)="closeAvatarModal()">
-  <dialog class="avatar-modal-content" open aria-modal="true" aria-labelledby="avatarTitle" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+<div *ngIf="showAvatarModal" class="avatar-modal" (click)="closeAvatarModal()" (keydown.enter)="closeAvatarModal()"
+  (keydown.space)="closeAvatarModal()" (keydown.escape)="closeAvatarModal()">
+  <dialog class="avatar-modal-content" open aria-modal="true" aria-labelledby="avatarTitle"
+    (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
     <header class="avatar-modal-header">
       <h3 id="avatarTitle">{{ (esAltaAdmin || esAltaCreador) ? 'Elige un avatar' : 'Elige tu avatar' }}</h3>
-      <button class="avatar-close" type="button" aria-label="Cerrar" (click)="closeAvatarModal()" (keydown.enter)="closeAvatarModal()">✕</button>
+      <button class="avatar-close" type="button" aria-label="Cerrar" (click)="closeAvatarModal()"
+        (keydown.enter)="closeAvatarModal()">✕</button>
     </header>
 
     <div class="avatar-preview" *ngIf="selectedAvatar; else noPreview">
@@ -312,7 +291,8 @@
 
     <ul class="avatar-grid">
       <li *ngFor="let avatar of avatars" class="avatar-option" [class.selected]="selectedAvatar === avatar">
-        <button type="button" (click)="selectAvatar(avatar)" (keydown.enter)="selectAvatar(avatar)" [attr.aria-pressed]="selectedAvatar === avatar" [attr.aria-label]="'Elegir avatar ' + avatar">
+        <button type="button" (click)="selectAvatar(avatar)" (keydown.enter)="selectAvatar(avatar)"
+          [attr.aria-pressed]="selectedAvatar === avatar" [attr.aria-label]="'Elegir avatar ' + avatar">
           <img [src]="avatar" alt="avatar">
           <span class="avatar-check">✓</span>
         </button>

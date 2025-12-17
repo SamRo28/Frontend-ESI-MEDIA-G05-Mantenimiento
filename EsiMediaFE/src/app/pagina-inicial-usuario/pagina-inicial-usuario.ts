@@ -193,6 +193,7 @@ export class PaginaInicialUsuario implements OnInit {
 
   private loggedUser: UserDto | null = null;
   private userAliasActual = '';
+  private historyIds: string[] = [];
 
   loading = false;
   errorMsg = '';
