@@ -45,7 +45,7 @@ export interface ModificarContenidoRequest {
 
 @Injectable({ providedIn: 'root' })
 export class Contenidos {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly BASE = `${environment.API_BASE}/Contenidos`;
   listar(): Observable<Contenido[]> {
     return this.http.get<any[]>(`${this.BASE}/ListarContenidos`).pipe(
@@ -102,6 +102,18 @@ export class Contenidos {
     }
 
     return this.http.post<Contenido>(`${this.BASE}/AnadirContenido`, body);
+  }
+
+  /**
+   * Sube un fichero de audio asociado a un contenido ya creado.
+   * POST /Contenidos/{id}/upload-audio (multipart FormData, campo 'file')
+   */
+  uploadAudio(contenidoId: string, file: File, userEmail?: string) {
+    const fd = new FormData();
+    fd.append('file', file, file.name);
+    const headers = userEmail ? new HttpHeaders({ 'X-User-Email': userEmail }) : undefined;
+    const url = `${this.BASE}/${encodeURIComponent(contenidoId)}/upload-audio`;
+    return this.http.post<{ fichero: string }>(url, fd, headers ? { headers } : {});
   }
 
   modificar(id: string, cambios: ModificarContenidoRequest, creatorTipo: TipoContenido): Observable<Contenido> {

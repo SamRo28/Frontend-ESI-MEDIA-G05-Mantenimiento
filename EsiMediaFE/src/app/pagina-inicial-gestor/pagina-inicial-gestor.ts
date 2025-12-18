@@ -10,6 +10,7 @@ import { AuthService } from '../auth/auth.service';
 import { AppUser, UserDto } from '../auth/models';
 import { Contenidos, Contenido, ModificarContenidoRequest, TipoContenido } from '../contenidos';
 import { ListasPublicasService } from '../listas-publicas.service';
+import { TAGS_AUDIO, TAGS_VIDEO } from '../tags.constants';
 
 type Role = UserDto['role'];
 
@@ -147,6 +148,11 @@ export class PaginaInicialGestor implements OnInit {
     disponibleHasta: null as string | null
   };
 
+  // Nuevo: selector de origen de audio y manejo de fichero
+  audioSource: 'url' | 'file' = 'url';
+  selectedAudioFile: File | null = null;
+  fileError: string | null = null;
+
   canManage = (c: Contenido | null | undefined): boolean =>
     !!c && !!this.userTipoContenido && c.tipo === this.userTipoContenido;
 
@@ -158,7 +164,7 @@ export class PaginaInicialGestor implements OnInit {
     return true;
   }
   private notAllowedMsg = (contenidoTipo?: string | null) =>
-    `Tu perfil es de tipo ${this.userTipoContenido || '—'} y este contenido es ${contenidoTipo || '—'}. No puedes realizar esta acción.`;
+    `Tu perfil es de tipo ${this.userTipoContenido ?? '—'} y este contenido es ${contenidoTipo ?? '—'}. No puedes realizar esta acción.`;
 
   private withPermission(c: Contenido, action: () => void) {
     if (!this.requireTipoContenido()) return;
@@ -181,10 +187,7 @@ export class PaginaInicialGestor implements OnInit {
     'assets/avatars/avatar4.png', 'assets/avatars/avatar5.png', 'assets/avatars/avatar6.png'
   ];
 
-  availableTags = {
-    video: ['Acción', 'Comedia', 'Drama', 'Suspenso', 'Animación', 'Ciencia Ficción', 'Terror', 'Documental', 'Romance', 'Aventura'],
-    audio: ['Comedia', 'Podcast', 'Humor', 'Música', 'Entrevista', 'Relajación', 'Educativo', 'Narrativa', 'Motivacional', 'Noticias']
-  };
+  availableTags = { video: TAGS_VIDEO, audio: TAGS_AUDIO };
 
   dropdownOpen = false;
 
@@ -340,11 +343,104 @@ export class PaginaInicialGestor implements OnInit {
       void showAlert('Revisa el formulario', msg, 'error');
       return;
     }
+
+    // Si el gestor seleccionó fichero y no hay archivo, bloquear
+    if (this.userTipoContenido === 'AUDIO' && this.audioSource === 'file' && !this.selectedAudioFile) {
+      void showAlert('Falta archivo', 'Has seleccionado subir fichero pero no has elegido ningún archivo.', 'error');
+      return;
+    }
+
     this.loading = true; this.lastSubmitAt = Date.now();
-    this.contenidos.subirContenido(this.buildContenidoPayload()).subscribe({
-      next: () => this.onUploadSuccess(),
+
+    // 1) Crear el contenido (sin fichero si se subirá luego)
+    const payload = this.buildContenidoPayload();
+    // Si subiremos fichero, no enviar ficheroAudio ahora (backend espera upload posterior)
+    if (this.userTipoContenido === 'AUDIO' && this.audioSource === 'file') {
+      delete (payload as any).ficheroAudio;
+    }
+
+    this.contenidos.subirContenido(payload).subscribe({
+      next: (created: any) => {
+        // Si hay que subir fichero, hacerlo ahora
+        if (this.userTipoContenido === 'AUDIO' && this.audioSource === 'file' && this.selectedAudioFile) {
+          this.contenidos.uploadAudio(created.id, this.selectedAudioFile, this.userEmail).subscribe({
+            next: (res: any) => {
+              // éxito: recargar y notificar
+              this.loading = false;
+              this.crearAbierto = false;
+              this.selectedAudioFile = null;
+              this.fileError = null;
+              this.loadContenidos();
+              setTimeout(() => void showAlert('¡Éxito!', 'Contenido y audio subidos correctamente.', 'success'), 0);
+            },
+            error: (err: any) => {
+              this.loading = false;
+              const raw = err?.error;
+              const msgErr = raw?.error || raw?.message || err?.message || 'Error subiendo fichero';
+              void showAlert('Error al subir audio', String(msgErr), 'error');
+            }
+          });
+        } else {
+          // No hay fichero a subir, comportamiento antiguo
+          this.onUploadSuccess();
+        }
+      },
       error: (err) => this.onUploadError(err)
     });
+  }
+
+  // === Manejo de fichero en cliente ===
+  async onAudioFileSelected(event: any) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files ? input.files[0] : null;
+    this.fileError = null;
+    this.selectedAudioFile = null;
+    if (!file) return;
+
+    // Validaciones simples
+    if (!this.isValidFileExtension(file.name)) {
+      this.fileError = 'Se requiere un fichero con extensión .mp3';
+      input.value = '';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    try {
+      const fmt = await this.detectAudioFormatByMagicBytes(file);
+      if (fmt !== 'mp3') {
+        this.fileError = `Formato no permitido (detectado: ${fmt ?? 'desconocido'})`;
+        input.value = '';
+        this.cdr.markForCheck();
+        return;
+      }
+    } catch (e) {
+      console.error('Error validando magic bytes', e);
+      this.fileError = 'No se pudo validar el fichero';
+      input.value = '';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.selectedAudioFile = file;
+    input.value = '';
+    this.cdr.markForCheck();
+  }
+
+  private isValidFileExtension(name: string) {
+    return name.toLowerCase().endsWith('.mp3');
+  }
+
+  private async detectAudioFormatByMagicBytes(file: File): Promise<string | null> {
+    const slice = file.slice(0, 12);
+    const buffer = await slice.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    if (bytes.length < 4) return null;
+    if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) return 'mp3';
+    if (bytes[0] === 0xFF && (bytes[1] & 0xE0) === 0xE0) return 'mp3';
+    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes.length >= 12 && bytes[8] === 0x57 && bytes[9] === 0x41 && bytes[10] === 0x56 && bytes[11] === 0x45) return 'wav';
+    if (bytes[0] === 0x4F && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53) return 'ogg';
+    if (bytes.length >= 8 && bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) return 'm4a';
+    return null;
   }
 
   private onUploadSuccess() {
@@ -409,7 +505,7 @@ export class PaginaInicialGestor implements OnInit {
 
   onView(c: Contenido) {
     this.vistaContenido = c;
-    this.vistaPoster = c.imagen || null;
+    this.vistaPoster = c.imagen ?? null;
     this.listasDelContenido = (this.listasPublicas ?? [])
       .filter(lista => (lista?.contenidosIds ?? []).some(id => this.idEq(id, c.id)))
       .map(lista => lista.nombre);
@@ -551,15 +647,15 @@ export class PaginaInicialGestor implements OnInit {
     const igualActual = this.userAliasActual && aliasNuevo &&
       aliasNuevo.localeCompare(this.userAliasActual, undefined, { sensitivity: 'accent' }) === 0;
     const aliasAEnviar = igualActual ? undefined : (aliasNuevo || undefined);
-    const fotoSeleccionada = trim(this.selectedAvatar || this.foto || this.model?.foto) || undefined;
+    const fotoSeleccionada = trim(this.selectedAvatar ?? this.foto ?? this.model?.foto) ?? undefined;
     const raw: Partial<AppUser> & { foto?: string; fotoUrl?: string } = {
       email: this.userEmail,
       alias: aliasAEnviar,
-      nombre: trim(this.model?.nombre) || undefined,
-      apellidos: trim(this.model?.apellidos) || undefined,
+      nombre: trim(this.model?.nombre) ?? undefined,
+      apellidos: trim(this.model?.apellidos) ?? undefined,
       descripcion: trim(this.model?.descripcion),
-      tipoContenido: trim(this.model?.tipoContenido) || undefined,
-      especialidad: trim(this.model?.especialidad) || undefined,
+      tipoContenido: trim(this.model?.tipoContenido) ?? undefined,
+      especialidad: trim(this.model?.especialidad) ?? undefined,
       fotoUrl: fotoSeleccionada,
       foto: fotoSeleccionada
     };
@@ -568,9 +664,9 @@ export class PaginaInicialGestor implements OnInit {
         this.paintFromProfile(perfil);
         const apiAvatar = normPath(perfil?.fotoUrl ?? perfil?.foto);
         const localAvatar = normPath(fotoSeleccionada ?? this.foto ?? this.model?.foto ?? null);
-        this.userAvatarUrl = cacheBust(apiAvatar || localAvatar);
+        this.userAvatarUrl = cacheBust(apiAvatar ?? localAvatar);
         this.selectedAvatar = null;
-        this.foto = apiAvatar || localAvatar || null;
+        this.foto = apiAvatar ?? localAvatar ?? null;
         this.editOpen = false;
         this.errorMsg = '';
         this.saving = false;
@@ -788,7 +884,10 @@ export class PaginaInicialGestor implements OnInit {
   private pasaEdad(c: Contenido): boolean {
     if (this.filtros.edadMin == null || isNaN(this.filtros.edadMin as any)) return true;
     const restr = Number(c.restringidoEdad ?? 0);
-    return restr >= Number(this.filtros.edadMin);
+    // Mostrar el contenido si su restricción de edad es menor o igual
+    // a la edad seleccionada en el filtro. Es decir: si el contenido
+    // está restringido a >=18 y el filtro es 17, NO se debe mostrar.
+    return restr <= Number(this.filtros.edadMin);
   }
 
   private pasaLista(c: Contenido): boolean {
